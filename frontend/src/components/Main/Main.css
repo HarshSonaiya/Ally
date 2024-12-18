@@ -1,0 +1,118 @@
+.main{
+    flex: 1;
+    min-height: 100vh;
+    padding-bottom: 15vh;
+    position: relative;
+}
+
+.main .nav{
+    display: flex;
+    align-items: center;
+    justify-content: 22px;
+    padding: 20px;
+    color: #585858;
+}
+
+.main .main-container{
+    max-width: 900px;
+    margin: auto;
+}
+
+.main .greet{
+    margin: 50px 0px;
+    font-size: 55px;
+    color: black;
+    font-weight: 500;
+    padding: 20px;
+}
+
+.main .greet span{
+    background: -webkit-linear-gradient(16deg,#6caafa,#8bff77);
+    background-clip: padding-box;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.main .cards{
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(180px,1fr));
+    gap:15px;
+    padding: 20px;
+}
+
+.main .card{
+    height: 90px;
+    padding: 15px;
+    background-color: #f0f4f9;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+.main .card p{
+    color: #585858;
+    font-size: 17px;
+}
+
+.main .card:hover{
+    background-color: #dfe4ea;
+}
+
+.main .search-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: #f0f4f9;
+    padding: 10px 20px;
+    border-radius: 30px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease;
+}
+
+.main .search-box:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.main .search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 5px;
+    font-size: 16px;
+    color: #333;
+}
+
+.main .search-box input::placeholder {
+    color: #aaa;
+    font-style: italic;
+}
+
+.main .search-box div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.main .search-box img {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.main .search-box img:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+}
+
+.main .bottom-info {
+    font-size: 14px;
+    margin: 20px auto;
+    text-align: center;
+    font-weight: 300;
+    color: #666;
+    line-height: 1.4;
+    max-width: 400px;
+    padding: 0 10px;
+}
