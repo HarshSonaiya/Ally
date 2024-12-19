@@ -1,0 +1,126 @@
+/* General Styling */
+.home-page {
+    position: relative;
+    width: 100%;
+    min-height: 100vh; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #6caafa, #8bff77);
+    overflow: hidden;
+    color: #333;
+}
+
+/* Animated Background */
+.animated-background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #6caafa 0%, #8bff77 100%);
+    background-size: 200% 200%;
+    animation: gradient-animation 10s infinite;
+    z-index: 1;
+    filter: blur(10px);
+    opacity: 0.8;
+}
+
+@keyframes gradient-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Login Modal */
+.login-modal {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+    animation: modal-entry 0.6s ease-out;
+    border: 1px solid #dfe4ea;
+}
+
+@keyframes modal-entry {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.app-title {
+    font-size: 2.8rem;
+    margin-bottom: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    background: -webkit-linear-gradient(16deg, #6caafa, #8bff77);
+    background-clip: padding-box;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.auth-prompt {
+    font-size: 1.3rem;
+    margin-bottom: 2rem;
+    color: #555;
+    font-weight: 400;
+}
+
+/* Buttons */
+.google-login-button {
+    padding: 0.8rem 1.5rem;
+    background-color: #007bff;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+    transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+
+.google-login-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 123, 255, 0.5);
+}
+
+.toggle-auth {
+    margin-top: 1.5rem;
+    padding: 0.7rem 1.4rem;
+    font-size: 1rem;
+    border: none;
+    background-color: #f0f4f9;
+    color: #007bff;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+.toggle-auth:hover {
+    background-color: #dfe4ea;
+    color: #0056b3;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Full-Screen Responsive Design */
+@media screen and (max-width: 768px) {
+    .login-modal {
+        width: 90%;
+        padding: 1.5rem;
+    }
+
+    .app-title {
+        font-size: 2rem;
+    }
+
+    .auth-prompt {
+        font-size: 1rem;
+    }
+
+    .toggle-auth, .google-login-button {
+        font-size: 0.9rem;
+    }
+}
