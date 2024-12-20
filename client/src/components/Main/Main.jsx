@@ -10,8 +10,8 @@ const Main = () => {
             </div>
             <div className="main-container">
                 <div className="greet">
-                    <p><span>Hello matey,</span></p>
-                    <p>What can I hep with ?</p>
+                    <p><span>Hey there!</span></p>
+                    <p>What can I do to assist you?</p>
                 </div>
                 <div className="cards">
                     <div className="card">
@@ -37,7 +37,7 @@ const Main = () => {
                         </div>
                     </div>
                     <p className='bottom-info'>
-                        Navio may display inaccurate information. Please perform your due diligence afterwards.
+                    Note that the information provided by Navio may not always be fully accurate. We recommend verifying any details independently to ensure correctness.
                     </p>
                 </div>
             </div>

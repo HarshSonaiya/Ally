@@ -10,7 +10,8 @@
     align-items: center;
     justify-content: 22px;
     padding: 20px;
-    color: #585858;
+    color: #585858; 
+    font-size: 22px;
 }
 
 .main .main-container{
@@ -108,11 +109,11 @@
 
 .main .bottom-info {
     font-size: 14px;
-    margin: 20px auto;
-    text-align: center;
-    font-weight: 300;
+    margin: 10px auto;
+    text-align: left;
+    font-weight: 400;
     color: #666;
     line-height: 1.4;
-    max-width: 400px;
+    max-width: 900px;
     padding: 0 10px;
 }
