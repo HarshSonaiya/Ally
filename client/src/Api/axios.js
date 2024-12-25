@@ -6,8 +6,7 @@ const api = axios.create({
 
 export const googleAuth = async (code) => {
   try {
-    console.log("Request Object code", code);
-    const response = await api.post(`/google-auth`, code); 
+    const response = await api.post('/google-auth', {code}); 
     return response.data; 
   } catch (error) {
     console.error("API Error:", error);

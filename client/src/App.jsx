@@ -27,7 +27,8 @@ const App = () => {
       <Routes>
         {/* Public Route */}
         {!isLoggedIn && <Route path="/" element={<LandingPage onLoginSuccess={handleLoginSuccess} />} />}
-        
+        <Route path="/callback" element={<CallbackPage onLoginSuccess={handleLoginSuccess} />} />
+
         {/* Private Routes */}
         {isLoggedIn && (
           <>
@@ -35,8 +36,6 @@ const App = () => {
             <Route path="/" element={<Navigate to="/home" replace />} />
           </>
         )}
-        {/* Callback Route for Google OAuth */}
-        <Route path="/callback" element={<CallbackPage onLoginSuccess={handleLoginSuccess} />} />
 
         {/* Fallback */}
         <Route path="*" element={<PageNotFound />} />

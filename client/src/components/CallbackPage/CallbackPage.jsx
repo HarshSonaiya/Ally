@@ -1,35 +1,42 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { googleAuth } from '../../Api/axios'; // Your function for backend communication
 
 const CallbackPage = ({ onLoginSuccess }) => {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const code = searchParams.get('code'); // Extract the code from URL
-
   useEffect(() => {
-    if (code) {
-      // Send the code to your backend to exchange it for an access token
-      const exchangeCode = async () => {
-        try {
-          const response = await googleAuth({ code }); // Backend call with code
-          console.log('Login Successful:', response.data);
-          onLoginSuccess(response.data); // Handle successful login
-        } catch (error) {
-          console.error('Error exchanging code:', error);
-          alert('Authentication failed. Please try again.');
-        }
-      };
-      exchangeCode();
-    }
-  }, [code, onLoginSuccess]);
+    const handleAuthCallback = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const authToken = params.get('authToken');
 
-  return (
-    <div>
-      <h2>Logging you in...</h2>
-      <p>Please wait while we process your authentication.</p>
-    </div>
-  );
+      if (authToken) {
+        try {
+          // Validate the token by calling the backend
+          const response = await fetch('http://localhost:8000/login/', {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${authToken}` },
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            if (data.userLoggedIn) {
+              onLoginSuccess(); // Notify parent of login success (update state or redirect)
+            } else {
+              console.error('Failed to authenticate token');
+            }
+          } else {
+            console.error('Failed to authenticate token');
+          }
+        } catch (error) {
+          console.error('Error during login callback:', error);
+        }
+      }
+
+      // Clear the query parameters from the URL
+      window.history.replaceState({}, document.title, '/');
+    };
+
+    handleAuthCallback();
+  }, [onLoginSuccess]);
+
+  return <div>Processing login...</div>;
 };
 
 export default CallbackPage;
