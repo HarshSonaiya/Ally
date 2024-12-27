@@ -18,7 +18,7 @@ file_controller = FileController()
 
 # Workspace Routes
 router.post("/workspace/create")(workspace_controller.create_workspace)
-router.post("/workspace/list")(workspace_controller.get_workspaces)
+router.get("/workspace/list")(workspace_controller.get_workspaces)
 
 # File Routes
 router.post("/file/upload")(file_controller.process_file)  

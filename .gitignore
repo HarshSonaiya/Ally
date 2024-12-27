@@ -57,3 +57,5 @@ public/
 *.pytest_cache/
 *.tox/
 .nox/
+
+Sample Data/

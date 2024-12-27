@@ -20,8 +20,12 @@ class ElasticsearchService:
         # Check for workspace with existing name
         response = self.es.search(
                 index="workspace_mappings",
-                body={"query": { "match": { "workspace_name": workspace_name } }}
-            )
+                body={
+                "query": {
+                    "term": { "workspace_name.keyword": workspace_name }  
+                }
+            }
+        )
         
         # If any hits are found, the workspace already exists
         if response['hits']['total']['value'] > 0:
@@ -39,7 +43,7 @@ class ElasticsearchService:
                     "file_id": {"type": "keyword"},
                     "transcript": {"type": "text"},
                     "participants": {"type": "keyword"},
-                    "embeddings": {"type": "nested"}
+                    "filename": {"type": "keyword"}
                 }
             }
         )
@@ -107,14 +111,13 @@ class ElasticsearchService:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error retrieving workspaces: {str(e)}")     
             
-    async def store_in_elastic(self, workspace_name: str, transcript: str, participants: list, embeddings: list | None = None) -> dict:
+    async def store_in_elastic(self, workspace_name: str, transcript: str, participants: list, filename:str) -> dict:
         file_id = uuid.uuid4().hex
 
         doc = {
-            "file_id": file_id,
-            "transcript": transcript['transcript'],
+            "transcript": transcript,
             "participants": participants,
-            "embeddings": embeddings if embeddings else []
+            "filename":filename
         }
 
         try:

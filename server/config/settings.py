@@ -22,5 +22,9 @@ class AppSettings:
         self.USERNAME = os.getenv("MAIL_USERNAME")
         self.PASSWORD = os.getenv("MAIL_PASSWORD")
         self.ELASTICSEARCH_HOST = os.getenv("ELASTIC_URL")
+        self.GROQ_LLM_NAME = os.getenv("GROQ_MODEL_NAME")
+        self.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+        self.DIARIZATION_MODEL_NAME = os.getenv("DIARIZATION_MODEL_NAME")
+        self.HUGGING_FACE_API_KEY = os.getenv("HUGGING_FACE_API_KEY")
 
 settings = AppSettings()

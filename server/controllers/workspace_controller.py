@@ -32,8 +32,7 @@ class WorkspaceController:
         """
         try:
             workspaces = await self.elastic_service.get_workspace_mapping()
-            existing_workspaces = [workspace.get("workspace_name") for workspace in workspaces]
-            return existing_workspaces
+            return workspaces
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error getting workspaces: {e}")
         
