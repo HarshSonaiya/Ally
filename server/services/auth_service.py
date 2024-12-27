@@ -13,39 +13,52 @@ logger = logging.getLogger(__name__)
 
 class AuthService:
     AUTH_URL = settings.AUTH_URL
-    TOKEN_URL = settings.TOKEN_URL
-    USER_INFO_URL = settings.USER_INFO_URL
-    GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
-    GOOGLE_CLIENT_SECRET = settings.GOOGLE_CLIENT_SECRET
-    REDIRECT_URI = settings.REDIRECT_URI
+
     
     def __init__(self):
-        self.flow = Flow.from_client_config(
-            {
-                "web": {
-                    "client_id": self.GOOGLE_CLIENT_ID,
-                    "client_secret": self.GOOGLE_CLIENT_SECRET,
-                    "auth_uri": self.AUTH_URL,
-                    "token_uri": self.TOKEN_URL,
-                    "redirect_uris": [self.REDIRECT_URI],
-                }
-            },
-            scopes=["openid", "email", "profile"]
-        )
+        
+        self.GOOGLE_TOKEN_URI = settings.TOKEN_URL or "https://oauth2.googleapis.com/token"
+        self.GOOGLE_USER_INFO_URI = settings.USER_INFO_URL or "https://www.googleapis.com/oauth2/v3/userinfo"
+        self.GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID 
+        self.GOOGLE_CLIENT_SECRET = settings.GOOGLE_CLIENT_SECRET 
+        self.REDIRECT_URI = settings.REDIRECT_URI or "http://localhost:5173"
 
     async def get_request_uri(self):
         self.flow.redirect_uri = self.REDIRECT_URI
         auth_url, state = self.flow.authorization_url(prompt='consent', include_granted_scopes='true')
         return auth_url, state
 
-    async def get_user(self, auth_token):
-        self.flow.fetch_token(code=auth_token.code)
-        credentials = self.flow.credentials
-        response = requests.get(self.USER_INFO_URI, headers={"Authorization": f"Bearer {credentials.token}"})
-        if response.status_code == 200:
-            return response.json()
-        logger.error(f"Failed to retrieve user information {response.text} {response.status_code}")
-        raise Exception("Failed to retrieve user information") 
+    async def get_user(self, auth_code: str):
+        try:
+            # Exchange auth code for tokens
+            token_data = {
+                'code': auth_code,
+                'client_id': self.GOOGLE_CLIENT_ID,
+                'client_secret': self.GOOGLE_CLIENT_SECRET,
+                'redirect_uri': self.REDIRECT_URI,
+                'grant_type': 'authorization_code'
+            }
+            
+            token_response = requests.post(self.GOOGLE_TOKEN_URI, data=token_data)
+            if token_response.status_code != 200:
+                raise Exception(f"Token exchange failed: {token_response.text}")
+            
+            tokens = token_response.json()
+            access_token = tokens.get('access_token')
+
+            # Get user info using access token
+            headers = {'Authorization': f'Bearer {access_token}'}
+            user_info_response = requests.get(self.GOOGLE_USER_INFO_URI, headers=headers)
+            
+            if user_info_response.status_code != 200:
+                raise Exception("Failed to get user info")
+
+            return user_info_response.json()
+
+        except Exception as e:
+            logger.error(f"Auth error: {str(e)}")
+            return None
+
 
     # def process_google_auth(self, code: str):
     #     """
