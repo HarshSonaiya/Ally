@@ -1,4 +1,5 @@
 from fastapi import UploadFile, HTTPException, Depends, BackgroundTasks
+from fastapi.responses import FileResponse
 from typing import List
 from models.pydantic_models import AudioVideoFileRequest
 from services.fileprocessingservice import FileProcessingService
@@ -20,6 +21,7 @@ class FileController:
     async def process_file(self, background_tasks: BackgroundTasks, files: List[UploadFile], body: AudioVideoFileRequest = Depends(), ):
         
         try:
+            results = []
             for file in files:
                 file_extension = os.path.splitext(file.filename)[1].lower()
                 logger.info(f"Received file extension: {file_extension}")
@@ -29,7 +31,7 @@ class FileController:
 
                 if file_extension in valid_audio_video_extensions:
                     logger.info(f"Processing media file {file.filename}")
-                    transcript, summary = await self.file_service.process_audio_video_files(file)
+                    transcript, summary, transcript_embeddings, timestamp_based_embeddings = await self.file_service.process_audio_video_files(file)
                     
                 elif file_extension == ".pdf":
                     pass
@@ -39,17 +41,30 @@ class FileController:
                 # Store Transcript in Elasticsearch
                 file_id = await self.elastic_service.store_in_elastic(
                     workspace_name=body.workspace_name,
+                    filename=file.filename,
                     transcript=transcript,
-                    participants=body.participants,
-                    filename=file.filename
+                    transcript_embeddings=transcript_embeddings,
+                    timestamp_based_embeddings=timestamp_based_embeddings,
+                    participants=body.participants
                 )
+
+                temp_dir="tmp"
+                os.makedirs(temp_dir, exist_ok=True)  
+                file_path = os.path.join(temp_dir, file.filename)
+
+                # Save transcript to a .txt file
+                with open(file_path, "w") as f:
+                    f.write(transcript)
 
                 background_tasks.add_task(self.schedule_mail, workspace_name=body.workspace_name, file_id=file_id, summary=summary)
                 
-                return {
-                    "transcript":transcript,
-                    "summary":summary
-                }
+                results.append({
+                    "filename": file.filename,
+                    "transcript": FileResponse(file_path, media_type='text/plain', filename=file.filename),
+                    "summary": summary,
+                    "file_id": file_id
+                })
+            return results
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error storing data in Elasticsearch: {str(e)}")
     

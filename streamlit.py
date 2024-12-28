@@ -140,15 +140,21 @@ if "selected_workspace_id" in st.session_state and st.session_state.selected_wor
                         f"{API_URL}/file/upload",
                         files=files,
                         params={"workspace_name": st.session_state.selected_workspace_id},  
-                        data=body  # Send the body as JSON
+                        data=body  
                     )
 
                     if response.status_code == 200:
                         st.success(f"File(s) uploaded successfully!")
-                        st.session_state.transcript = response.json().get("transcript", "Transcript not available.")
-                        st.session_state.summary = response.json().get("summary", "Summary not available.")
-                        st.write(f"Transcript: {st.session_state.transcript}")
-                        st.write(f"Summary: {st.session_state.summary}")
+                        for result in response :
+                            st.session_state.filename = result.json().get("filename", "File names not available.")
+                            st.session_state.summary = result.json().get("summary", "Summary not available.")
+                            st.write(f"Response for file name: {st.session_state.filename}")
+                            st.write(f"Summary: {st.session_state.summary}")
+                            download_link = result.json().get("transcript", None)
+                            if download_link:
+                                st.markdown(f"[Download Transcript]({download_link})", unsafe_allow_html=True)
+                            else:
+                                st.write("Transcript not available for download.")
                     else:
                         st.error(f"Failed to upload file: {response.text}")
             else:
