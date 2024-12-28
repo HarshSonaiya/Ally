@@ -1,14 +1,13 @@
 import React from 'react';
-import TranscriptManager from '../TranscriptManager/TranscriptManager';
-import Sidebar from '../Sidebar/Sidebar';
-// import Main from '../Main/Main';
+import Sidebar from '../ui/Sidebar/Sidebar';
+import MainSection from '../Main/MainSection';
 
 const HomePage = () => {
   return (
     <>
-      {/* <Sidebar />
-      <Main /> */}
-      <TranscriptManager />
+      <Sidebar />
+      <MainSection />
+      {/* <TranscriptManager /> */}
     </>
   );
 };
