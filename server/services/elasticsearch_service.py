@@ -1,6 +1,11 @@
 import uuid
 from config.elasticsearch import get_es_client
 from fastapi import HTTPException
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class ElasticsearchService:
     def __init__(self):
@@ -43,10 +48,27 @@ class ElasticsearchService:
                     "file_id": {"type": "keyword"},
                     "transcript": {"type": "text"},
                     "participants": {"type": "keyword"},
-                    "filename": {"type": "keyword"}
+                    "filename": {"type": "keyword"},
+                    "transcript_embeddings": {
+                        "type": "dense_vector",
+                        "dims": 768  
+                    },
+                    "timestamp_based_embeddings": {
+                        "type": "nested",
+                        "properties": {
+                            "start": {"type": "float"},
+                            "end": {"type": "float"},
+                            "text": {"type": "text"},
+                            "embedding": {
+                                "type": "dense_vector",
+                                "dims": 384  
+                            }
+                        }
+                    }
                 }
             }
         )
+
         if response.get("acknowledged"):
             await self.store_workspace_mapping(workspace_name, index_name)
             return {"message": f"Index {index_name} created successfully."}
@@ -111,20 +133,36 @@ class ElasticsearchService:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error retrieving workspaces: {str(e)}")     
             
-    async def store_in_elastic(self, workspace_name: str, transcript: str, participants: list, filename:str) -> dict:
+    async def store_in_elastic(
+            self, workspace_name: str, 
+            filename: str, 
+            transcript: str, 
+            participants: list, 
+            transcript_embeddings: list, 
+            timestamp_based_embeddings: list
+        ) -> str:
+        logger.info(f"embedding: {type(transcript_embeddings)}")
+        logger.info(f"Time embedding: {type(timestamp_based_embeddings)}")
+
         file_id = uuid.uuid4().hex
 
+        # Document structure to match index mappings
         doc = {
+            "file_id": file_id,
             "transcript": transcript,
             "participants": participants,
-            "filename":filename
+            "filename": filename,
+            "transcript_embeddings": [0.25]*768,  
+            "timestamp_based_embeddings": []
         }
 
         try:
+            # Index document into Elasticsearch
             self.es.index(index=workspace_name, id=file_id, body=doc)
             return file_id
         except Exception as e:
-            return {"error": f"Error storing data in Elasticsearch: {str(e)}"}
+            logger.error(f"Error storing data in Elasticsearch for file {filename}: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error storing data in Elasticsearch: {str(e)}")
 
     def retrieve_from_elastic(self, workspace_name: str, file_id: str) -> dict:
         

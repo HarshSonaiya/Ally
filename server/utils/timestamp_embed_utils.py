@@ -1,4 +1,9 @@
 from sentence_transformers import SentenceTransformer
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class TimestampEmbeddingService:
     def __init__(self, model_name="paraphrase-MiniLM-L6-v2", token_limit=128):
@@ -12,6 +17,7 @@ class TimestampEmbeddingService:
         self.model = SentenceTransformer(model_name)
         self.tokenizer = self.model.tokenizer
         self.token_limit = token_limit
+        logger.info("Time stamp embedding model initialized successfully.")
 
     def chunk_text(self, text):
         """
@@ -29,6 +35,8 @@ class TimestampEmbeddingService:
             truncation=False, 
             add_special_tokens=False
         )["input_ids"]
+
+        logger.info(f"TOken generated successfully: {len(tokens)}")
         
         # Chunk the tokens into groups of self.token_limit
         token_chunks = [
@@ -37,6 +45,8 @@ class TimestampEmbeddingService:
         
         # Decode token chunks back to text
         text_chunks = [self.tokenizer.decode(chunk, skip_special_tokens=True) for chunk in token_chunks]
+        logger.info("Chunks generated successfully.")
+
         return text_chunks
 
 
@@ -57,14 +67,18 @@ class TimestampEmbeddingService:
         for segment in segments:
             text = segment["text"]
 
+            logger.info("Begin Chunking")
             # Chunk the text
             chunks = self.chunk_text(text)
             
+            logger.info("Begin embedding generation")
             # Generate embeddings for the chunks
             chunk_embeddings = self.model.encode(chunks)
-            
+            logger.info("Embeddings generation successfully.")
+
             # Aggregate chunk embeddings (e.g., average them to get a single representation for the segment)
             segment_embedding = sum(chunk_embeddings) / len(chunk_embeddings)
+            logger.info(f"Embeddings Aggregated successfully. {segment_embedding}")
             
             # Add metadata with timestamps and aggregated embedding
             results.append({

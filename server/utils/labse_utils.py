@@ -15,7 +15,7 @@ class LaBSEEmbeddingService:
             token_limit (int): Maximum number of tokens in each chunk.
         """
         self.model = SentenceTransformer(model_name)
-        self.tokenizer = self.model.tokenizer()
+        self.tokenizer = self.model.tokenizer
         self.token_limit = token_limit
         logger.info("LaBSE intialized successfully.")
         
@@ -56,10 +56,11 @@ class LaBSEEmbeddingService:
             logger.info(f"Starting chunk generation.")
             chunks = self.chunk_text(text)
 
-            logger.info("Starting embedding generation.")
+            logger.info(f"Starting embedding generation. for {len(chunks)}")
             embeddings = self.model.encode(chunks)
 
             logger.info(f"{len(embeddings)} Embeddings generated successfully.")
-            return embeddings
+            logger.info(f"Embeddings: {len(embeddings)} and type: {type(embeddings)}")
+            return embeddings.tolist()
         except Exception :
             raise Exception
