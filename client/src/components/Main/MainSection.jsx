@@ -1,5 +1,5 @@
 import React from 'react'
-import './Main.css'
+import './mainSection.css'
 import { assets } from '../../assets/assets'
 
 const Main = () => {
@@ -21,7 +21,7 @@ const Main = () => {
                         <p>Tell me some international news.</p>
                     </div>
                     <div className="card">
-                        <p>Know about the latest happenings in the Tech. Industry.</p>
+                        <p>{"Know about the latest happenings in the Tech. Industry."}</p>
                     </div>
                     <div className="card">
                         <p>Want to learn a about a new technology.</p>
@@ -29,7 +29,7 @@ const Main = () => {
                 </div>
                 <div className="main-bottom">
                     <div className="search-box">
-                        <input type="text" placeholder='What do you want to ask?'/>
+                        <input type="text" placeholder='What do you want to ask?' />
                         <div>
                             <img src={assets.gallery_icon} alt="" />
                             <img src={assets.web_icon} alt="" />
@@ -37,7 +37,7 @@ const Main = () => {
                         </div>
                     </div>
                     <p className='bottom-info'>
-                    Note that the information provided by Navio may not always be fully accurate. We recommend verifying any details independently to ensure correctness.
+                        {"Note that the information provided by Navio may not always be fully accurate. We recommend verifying any details independently to ensure correctness."}
                     </p>
                 </div>
             </div>

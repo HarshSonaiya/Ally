@@ -9,6 +9,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         {/* Directly render HomePage */}
+        {/* <Route path="/" element={<LandingPage />} /> */}
         <Route path="/" element={<LandingPage />} />
 
         {/* Fallback route */}

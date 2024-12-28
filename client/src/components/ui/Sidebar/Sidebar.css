@@ -5,6 +5,13 @@
     justify-content: space-between;
     background-color: rgb(205, 224, 249);
     padding: 25px 15px;
+    width: 5rem;
+    transition: width 0.3s ease;
+    overflow: hidden;
+}
+
+.extended {
+    width: 15rem !important;
 }
 
 .sidebar img{

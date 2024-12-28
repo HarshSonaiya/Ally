@@ -1,10 +1,40 @@
-*{
+* {
   padding: 0;
-  margin:0;
+  margin: 0;
   box-sizing: border-box;
 }
 
-#root{
+#root {
   min-height: 100vh;
   display: flex;
+}
+
+:root {
+  /* Color Palette */
+  --primary: #3b82f6; /* Blue */
+  --primary-rgb: 59, 130, 246; /* RGB values for primary color */
+  --primary-foreground: #ffffff; /* Text color for primary button */
+
+  --destructive: #ef4444; /* Red */
+  --destructive-rgb: 239, 68, 68; /* RGB values for destructive color */
+  --destructive-foreground: #ffffff; /* Text color for destructive button */
+
+  --secondary: #9333ea; /* Purple */
+  --secondary-rgb: 147, 51, 234; /* RGB values for secondary color */
+  --secondary-foreground: #ffffff; /* Text color for secondary button */
+
+  --background: #ffffff; /* Background color for the page */
+  --foreground: #333333; /* Default text color */
+  --component-background: #010101; /* Background color for components */
+  --component-background-rgb: 1, 1, 1; /* RGB values for component background */
+
+  --input: #d1d5db; /* Light gray for input borders */
+  --accent: #f59e0b; /* Amber for accent color */
+  --accent-foreground: #ffffff; /* Text color for accent elements */
+
+  /* Font and spacing */
+  --font-family: "Inter", sans-serif; /* Example font family */
+  --font-size: 16px; /* Base font size */
+  --line-height: 1.5; /* Line height */
+  --border-radius: 0.375rem; /* Standard border radius */
 }
