@@ -55,12 +55,49 @@
 // export default LandingPage;
 
 
-import React from 'react';
-import './LandingPage.css';
+import React, { useState } from 'react';
+import { useGoogleLogin } from '@react-oauth/google';
+import { googleAuth } from '../../Api/axios';
 import Button from '../../components/ui/Button';
 import { assets } from '../../assets/assets';
+import './LandingPage.css';
+import Hamburger from '../icons/HamBurger';
 
 const Index = () => {
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setMenuOpen(prevState => !prevState);
+  };
+
+  const displayCode = `const ally = new AllyAI({
+  apiKey: 'your-api-key'
+});
+
+const response = await ally.analyze({
+  text: documentContent,
+  type: 'document'
+});`;
+
+  const handleTokenRequest = async codeResponse => {
+    try {
+      const response = await googleAuth(codeResponse.code);
+      if (response.data.userLoggedIn) {
+        // onLoginSuccess();
+      } else {
+        console.error('Failed to authenticate token');
+      }
+    } catch (error) {
+      console.error('Error during login callback:', error);
+    }
+  }
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: codeResponse => handleTokenRequest(codeResponse),
+    flow: 'auth-code',
+  });
+
   return (
     <div className="landing-page">
       {/* Header Section */}
@@ -77,19 +114,28 @@ const Index = () => {
             <li><a href="#developer">Developer Portal</a></li>
           </ul>
           <div className="auth-buttons">
-            <Button variant="outline">Sign In</Button>
-            <Button>Sign Up</Button>
+            <Button variant="outline" size='sm' onClick={handleGoogleLogin}>Sign In</Button>
+            {/* <Button size='sm'>Sign Up</Button> */}
           </div>
         </nav>
+        <Button variant="outline" className="menu-toggle" size="md" onClick={() => toggleMenu()}>
+          <Hamburger isOpen={menuOpen} />
+          {/* Hello */}
+        </Button>
       </header>
 
       {/* Hero Section */}
       <section className="hero">
-        <h1>Your Ally for Every Conversation, Insight, and Idea.</h1>
-        <p>Experience the future of conversation with Ally, your AI companion that understands documents, transcribes media, and searches the web — all in one place.</p>
-        <div className="cta-buttons">
-          <Button size="lg">Start Chatting</Button>
-          <Button variant="outline" size="lg">Try Demo</Button>
+        <div className='hero-left'>
+          <h1>Your Ally for Every Conversation, Insight, and Idea.</h1>
+          <p>Experience the future of conversation with Ally, your AI companion that understands documents, transcribes media, and searches the web — all in one place.</p>
+          <div className="cta-buttons">
+            <Button size="lg">Start Chatting</Button>
+            <Button variant="outline" size="lg">Try Demo</Button>
+          </div>
+        </div>
+        <div className='hero-right'>
+          <img src={assets.right_section} alt="Ally." />
         </div>
       </section>
 
@@ -128,19 +174,11 @@ const Index = () => {
         <div className="content">
           <h2>Customize Your Experience</h2>
           <p>Build powerful AI-driven applications with our developer-friendly tools and APIs.</p>
-          <Button>Access Developer Portal</Button>
+          <Button size='md'>Access Developer Portal</Button>
         </div>
         <div className="code-preview">
           <pre>
-            <code>{`
-const ally = new AllyAI({
-  apiKey: 'your-api-key'
-});
-
-const response = await ally.analyze({
-  text: documentContent,
-  type: 'document'
-});`}
+            <code>{displayCode}
             </code>
           </pre>
         </div>
@@ -200,32 +238,32 @@ const features = [
   {
     icon: "📄",
     title: "Document Analysis",
-    description: "Analyze and extract insights from any document format."
+    description: "Upload PDFs and get instant insights. Ally reads and understands your documents, making information retrieval effortless."
   },
   {
     icon: "🎙️",
     title: "Media Transcription",
-    description: "Convert audio and video content into searchable text."
+    description: "Convert audio and video files into accurate transcripts with AI-powered transcription technology."
   },
   {
     icon: "📝",
     title: "Custom Summaries",
-    description: "Get concise summaries tailored to your needs."
+    description: "Generate precise summaries for specific segments of your media files, saving time and increasing productivity."
   },
   {
     icon: "🔍",
     title: "Web Search",
-    description: "Search and analyze web content in real-time."
+    description: "Access real-time information from the web to enhance your conversations with up - to - date knowledge."
   },
   {
     icon: "🛠️",
     title: "Developer Playground",
-    description: "Test and integrate AI features in your applications."
+    description: "Customize chunking strategies and LLM parameters in our developer-friendly environment."
   },
   {
     icon: "🤖",
     title: "AI Assistant",
-    description: "24/7 intelligent support for your queries."
+    description: "Experience natural conversations with our advanced AI that learns and adapts to your needs."
   }
 ];
 
