@@ -4,10 +4,10 @@
   box-sizing: border-box;
 }
 
-#root {
+/* #root {
   min-height: 100vh;
   display: flex;
-}
+} */
 
 :root {
   /* Color Palette */
@@ -29,7 +29,7 @@
   --component-background-rgb: 1, 1, 1; /* RGB values for component background */
 
   --input: #d1d5db; /* Light gray for input borders */
-  --accent: #f59e0b; /* Amber for accent color */
+  --accent: #010101; /* Amber for accent color */
   --accent-foreground: #ffffff; /* Text color for accent elements */
 
   /* Font and spacing */
@@ -37,4 +37,9 @@
   --font-size: 16px; /* Base font size */
   --line-height: 1.5; /* Line height */
   --border-radius: 0.375rem; /* Standard border radius */
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size);
 }

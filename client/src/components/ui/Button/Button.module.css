@@ -1,107 +1,111 @@
 /* Base button styles */
 .button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: background-color 0.2s ease, color 0.2s ease, border 0.2s ease;
-    outline: none;
-    border: none;
-    cursor: pointer;
-    position: relative;
-    box-sizing: border-box;
-  }
-  
-  .button:focus-visible {
-    outline: 2px solid #999;
-    outline-offset: 2px;
-  }
-  
-  .button:disabled {
-    pointer-events: none;
-    opacity: 0.5;
-  }
-  
-  /* Button Variants */
-  .variantDefault {
-    background-color: var(--component-background);
-    color: var(--primary-foreground);
-  }
-  
-  .variantDefault:hover {
-    background-color: rgba(var(--component-background-rgb), 0.9);
-  }
-  
-  .variantDestructive {
-    background-color: var(--destructive);
-    color: var(--destructive-foreground);
-  }
-  
-  .variantDestructive:hover {
-    background-color: rgba(var(--destructive-rgb), 0.9);
-  }
-  
-  .variantOutline {
-    border: 1px solid var(--input);
-    background-color: var(--background);
-    color: var(--foreground);
-  }
-  
-  .variantOutline:hover {
-    background-color: var(--accent);
-    color: var(--accent-foreground);
-  }
-  
-  .variantSecondary {
-    background-color: var(--secondary);
-    color: var(--secondary-foreground);
-  }
-  
-  .variantSecondary:hover {
-    background-color: rgba(var(--secondary-rgb), 0.8);
-  }
-  
-  .variantGhost {
-    background-color: transparent;
-    color: var(--accent-foreground);
-  }
-  
-  .variantGhost:hover {
-    background-color: var(--accent);
-    color: var(--accent-foreground);
-  }
-  
-  .variantLink {
-    color: var(--primary);
-    text-decoration: underline;
-  }
-  
-  .variantLink:hover {
-    text-decoration: underline;
-  }
-  
-  /* Button Sizes */
-  .sizeDefault {
-    height: 2.5rem;
-    padding: 0 1rem;
-  }
-  
-  .sizeSm {
-    height: 2.25rem;
-    padding: 0 0.75rem;
-  }
-  
-  .sizeLg {
-    height: 2.75rem;
-    padding: 0 2rem;
-  }
-  
-  .sizeIcon {
-    height: 2.5rem;
-    width: 2.5rem;
-    padding: 0;
-  }
-  
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease, border 0.2s ease;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.button:focus-visible {
+  outline: 2px solid #999;
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Button Variants */
+.variantDefault {
+  background-color: var(--component-background);
+  color: var(--primary-foreground);
+}
+
+.variantDefault:hover {
+  background-color: rgba(var(--component-background-rgb), 0.9);
+}
+
+.variantDestructive {
+  background-color: var(--destructive) !important;
+  color: var(--destructive-foreground);
+}
+
+.variantDestructive:hover {
+  background-color: rgba(var(--destructive-rgb), 0.9);
+}
+
+.variantOutline {
+  border: 1px solid var(--input);
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.variantOutline:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.variantSecondary {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+}
+
+.variantSecondary:hover {
+  background-color: rgba(var(--secondary-rgb), 0.8) !important;
+}
+
+.variantGhost {
+  background-color: transparent;
+  color: var(--accent-foreground) !important;
+}
+
+.variantGhost:hover {
+  background-color: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+}
+
+.variantLink {
+  color: var(--primary);
+  text-decoration: underline !important;
+}
+
+.variantLink:hover {
+  text-decoration: underline !important;
+}
+
+/* Button Sizes */
+
+.sizeSm {
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  font-size: small;
+}
+
+.sizeMd {
+  height: 3rem;
+  padding: 0 1rem;
+  font-size: medium;
+}
+
+.sizeLg {
+  height: 3.75rem;
+  padding: 0 2rem;
+  font-size: large;
+}
+
+.sizeIcon {
+  height: 2.5rem;
+  width: 2.5rem;
+  padding: 0;
+}
