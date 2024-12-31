@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from models.pydantic_models import WorkspaceRequest
-from services.elasticsearch_service import ElasticsearchService
+from services import elastic_service
 import logging
 
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class WorkspaceController:
 
     def __init__(self):
-        self.elastic_service = ElasticsearchService()
+        self.elastic_service = elastic_service
         
     async def create_workspace(self, workspace: WorkspaceRequest) -> dict:
         """
@@ -41,3 +41,4 @@ class WorkspaceController:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error getting workspaces: {e}")
         
+workspace_controller = WorkspaceController()

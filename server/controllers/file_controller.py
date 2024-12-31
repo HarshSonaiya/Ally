@@ -2,9 +2,8 @@ from fastapi import UploadFile, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import FileResponse
 from typing import List
 from models.pydantic_models import AudioVideoFileRequest
-from services.fileprocessingservice import FileProcessingService
+from services import file_processing_service, elastic_service
 from utils.mail_utils import send_email
-from services.elasticsearch_service import ElasticsearchService
 from starlette.concurrency import run_in_threadpool
 
 import logging
@@ -15,9 +14,44 @@ logger = logging.getLogger(__name__)
 
 class FileController:
     def __init__(self):
-        self.file_service = FileProcessingService()
-        self.elastic_service = ElasticsearchService()
+        self.file_service = file_processing_service
+        self.elastic_service = elastic_service
+    
+    async def get_files(self, workspace_name: str):
+        """
+        Retrieves a list of files from the specified workspace index in Elasticsearch.
 
+        :param workspace_name: The name of the workspace, which is also the index name in Elasticsearch.
+        :return: List of files in the specified workspace.
+        """
+        try:
+            # Perform an Elasticsearch search query on the specified workspace index
+            query = {
+                "query": {
+                    "match_all": {}
+                }
+            }
+            
+            # Query Elasticsearch for all documents in the workspace index
+            response = await self.elastic_service.es.search(index=workspace_name, body=query)
+
+            # Check if we got results
+            if response['hits']['total']['value'] > 0:
+                files = []
+                for hit in response['hits']['hits']:
+                    # Extract file details
+                    file_data = hit["_source"]
+                    files.append({
+                        "filename": file_data["filename"],
+                        "file_id": file_data["file_id"]
+                    })
+                return files
+            else:
+                return []  # Return an empty list if no files are found
+        except Exception as e:
+            print(f"Error fetching files from workspace '{workspace_name}': {e}")
+            return []
+    
     async def process_file(self, background_tasks: BackgroundTasks, files: List[UploadFile], body: AudioVideoFileRequest = Depends(), ):
         
         try:
@@ -31,7 +65,7 @@ class FileController:
 
                 if file_extension in valid_audio_video_extensions:
                     logger.info(f"Processing media file {file.filename}")
-                    transcript, summary, transcript_embeddings, timestamp_based_embeddings = await self.file_service.process_audio_video_files(file)
+                    media_results = await self.file_service.process_audio_video_files(file)
                     
                 elif file_extension == ".pdf":
                     pass
@@ -42,26 +76,16 @@ class FileController:
                 file_id = await self.elastic_service.store_in_elastic(
                     workspace_name=body.workspace_name,
                     filename=file.filename,
-                    transcript=transcript,
-                    transcript_embeddings=transcript_embeddings,
-                    timestamp_based_embeddings=timestamp_based_embeddings,
-                    participants=body.participants
+                    transcript=media_results.get("transcript",""),
+                    participants=body.participants,
+                    transcript_embeddings=media_results.get("embeddings",[])
                 )
 
-                temp_dir="tmp"
-                os.makedirs(temp_dir, exist_ok=True)  
-                file_path = os.path.join(temp_dir, file.filename)
-
-                # Save transcript to a .txt file
-                with open(file_path, "w") as f:
-                    f.write(transcript)
-
-                background_tasks.add_task(self.schedule_mail, workspace_name=body.workspace_name, file_id=file_id, summary=summary)
+                background_tasks.add_task(self.schedule_mail, workspace_name=body.workspace_name, file_id=file_id, summary=media_results.get("summary",""))
                 
                 results.append({
                     "filename": file.filename,
-                    "transcript": FileResponse(file_path, media_type='text/plain', filename=file.filename),
-                    "summary": summary,
+                    "summary": media_results.get("summary",""),
                     "file_id": file_id
                 })
             return results
@@ -77,4 +101,4 @@ class FileController:
         except Exception as e:
             logger.error(f"Failed to send email for file_id: {file_id}. Error: {str(e)}")
 
-        
+file_controller = FileController()

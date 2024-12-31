@@ -4,9 +4,6 @@ import datetime
 from langchain.agents import initialize_agent, AgentType
 from langchain_groq import ChatGroq
 from langchain_community.tools import DuckDuckGoSearchResults
-from agents.tools.web_search_tool import WebSearchTool  # Import the WebSearchTool from the tools folder
-from agents.tools.pdf_processing_tool import PdfProcessingTool  # If you have a PDF processing tool
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)    
 

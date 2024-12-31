@@ -21,7 +21,7 @@ class Diarization:
         """
         self.pipeline = Pipeline.from_pretrained(
             settings.DIARIZATION_MODEL_NAME,
-            use_auth_token= settings.HUGGING_FACE_API_KEY
+            use_auth_token= settings.HUGGING_FACE_ACCESS_TOKEN
         )
     async def perform_diarization(self, audio_file_path: str):
         """
@@ -56,7 +56,7 @@ class Diarization:
         logger.info(f"Diarization completed. {len(speaker_segments)} segments found.")
         return speaker_segments
     
-    async def map_transcription_to_diarization(transcription: List[Dict], diarization: List[Dict], tolerance: float = 0.5) -> List[Dict]:
+    async def map_transcription_to_diarization(self, transcription: List[Dict], diarization: List[Dict], tolerance: float = 0.5) -> List[Dict]:
         """
         Maps transcription segments to speaker diarization segments.
         
@@ -128,68 +128,6 @@ class Diarization:
                 merged_transcript.append(seg)
         
         return merged_transcript
-    
-    def map_speaker_to_transcription_text(self, diarization_segments, transcription_segments):
-        """
-        Map speaker labels from diarization output to transcription output and format as a single string.
-
-        Args:
-            diarization_segments (list): List of diarization segments with 'start', 'end', and 'speaker'.
-            transcription_segments (list): List of transcription segments with 'start', 'end', and 'text'.
-
-        Returns:
-            str: Formatted string with speakers and their corresponding text.
-        """
-        speaker_text_mapping = {}
-
-        try:   
-            logger.info("Mapping begins.")
-            for diarization in diarization_segments:
-                for transcription in transcription_segments:
-                    # Check if there's an overlap between diarization and transcription timestamps
-                    if not (diarization["end"] <= transcription["start"] or diarization["start"] >= transcription["end"]):
-                        # Get the speaker ID (e.g., 'SPEAKER_00' -> 'Speaker 0')
-                        speaker_id = diarization["speaker"].replace("SPEAKER_", "Speaker ")
-                        # Initialize speaker text if not already present
-                        if speaker_id not in speaker_text_mapping:
-                            speaker_text_mapping[speaker_id] = []
-                        # Append the transcription text to the speaker's list
-                        speaker_text_mapping[speaker_id].append(transcription["text"])
-        except Exception as e :
-            logger.error(f"Error here: {e}")
-
-        # Format the result as a single string
-        formatted_output = "\n".join(
-            f"{speaker}: {' '.join(texts).strip()}" for speaker, texts in speaker_text_mapping.items()
-        )
-
-        return formatted_output
-
-    def map_speaker_to_transcription_text1(self, diarization_segments, transcription_segments):
-        """
-        Map speaker labels from diarization to transcription segments as a structured list.
-
-        Args:
-            diarization_segments (list): List of diarization segments with 'start', 'end', and 'speaker'.
-            transcription_segments (list): List of transcription segments with 'start', 'end', and 'text'.
-
-        Returns:
-            list: List of segments with 'speaker', 'start', 'end', and 'text'.
-        """
-        combined_segments = []
-
-        for diarization in diarization_segments:
-            for transcription in transcription_segments:
-                # Check if there's an overlap between diarization and transcription timestamps
-                if not (diarization["end"] <= transcription["start"] or diarization["start"] >= transcription["end"]):
-                    combined_segments.append({
-                        "speaker": diarization["speaker"],
-                        "start": max(diarization["start"], transcription["start"]),
-                        "end": min(diarization["end"], transcription["end"]),
-                        "text": transcription["text"]
-                    })
-
-        return combined_segments
     
     def format_combined_segments(self, combined_segments):
         """

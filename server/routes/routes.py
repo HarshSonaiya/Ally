@@ -1,26 +1,18 @@
 from fastapi import APIRouter
-from controllers.auth_controller import AuthController
-# from controllers.workspace_controller import WorkspaceController
-# from controllers.file_controller import FileController
+from controllers import auth_controller, file_controller, workspace_controller
 
 # Create an APIRouter to register the routes
 router = APIRouter()
 
-auth_controller = AuthController()
-# workspace_controller = WorkspaceController()
-# file_controller = FileController()
-
-# Authentication Routes
-# router.post("auth/login-redirect")(auth_controller.login_redirect)
-router.post("auth/google-login-callback/")(auth_controller.google_login_callback)
+# Authentication Route
 router.post("/auth/google-auth")(auth_controller.google_auth)  
-# router.get("auth/user-session-status/")(auth_controller.user_session_status)  
 
 # Workspace Routes
-# router.post("/workspace/create")(workspace_controller.create_workspace)
-# router.get("/workspace/list")(workspace_controller.get_workspaces)
+router.post("/workspace/create")(workspace_controller.create_workspace)
+router.get("/workspace/list")(workspace_controller.get_workspaces)
 
 # File Routes
-# router.post("/file/upload")(file_controller.process_file)  
+router.get("/file/list")(file_controller.get_files)
+router.post("/file/upload")(file_controller.process_file)  
 
-# router.get("auth/logout/")(auth_controller.logout)  
+router.get("auth/logout/")(auth_controller.logout)  

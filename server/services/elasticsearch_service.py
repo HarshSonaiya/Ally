@@ -1,5 +1,5 @@
 import uuid
-from config.elasticsearch import get_es_client
+from config import get_es_client
 from fastapi import HTTPException
 import logging
 
@@ -50,10 +50,6 @@ class ElasticsearchService:
                     "participants": {"type": "keyword"},
                     "filename": {"type": "keyword"},
                     "transcript_embeddings": {
-                        "type": "dense_vector",
-                        "dims": 768  
-                    },
-                    "timestamp_based_embeddings": {
                         "type": "nested",
                         "properties": {
                             "start": {"type": "float"},
@@ -61,7 +57,7 @@ class ElasticsearchService:
                             "text": {"type": "text"},
                             "embedding": {
                                 "type": "dense_vector",
-                                "dims": 384  
+                                "dims": 768  
                             }
                         }
                     }
@@ -138,32 +134,41 @@ class ElasticsearchService:
             filename: str, 
             transcript: str, 
             participants: list, 
-            transcript_embeddings: list, 
-            timestamp_based_embeddings: list
+            transcript_embeddings: list
         ) -> str:
-        logger.info(f"embedding: {type(transcript_embeddings)}")
-        logger.info(f"Time embedding: {type(timestamp_based_embeddings)}")
+            
+            # Generate a unique file ID
+            file_id = uuid.uuid4().hex
 
-        file_id = uuid.uuid4().hex
+            # Build the document structure
+            doc = {
+                "file_id": file_id,
+                "transcript": transcript,
+                "participants": participants,
+                "filename": filename,
+                "transcript_embeddings": [
+                    {
+                        "start": segment["start"],
+                        "end": segment["end"],
+                        "text": segment["chunk"],
+                        "embedding": segment["embedding"]
+                    }
+                    for segment in transcript_embeddings
+                ]
+            }
 
-        # Document structure to match index mappings
-        doc = {
-            "file_id": file_id,
-            "transcript": transcript,
-            "participants": participants,
-            "filename": filename,
-            "transcript_embeddings": [0.25]*768,  
-            "timestamp_based_embeddings": []
-        }
-
-        try:
-            # Index document into Elasticsearch
-            self.es.index(index=workspace_name, id=file_id, body=doc)
-            return file_id
-        except Exception as e:
-            logger.error(f"Error storing data in Elasticsearch for file {filename}: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Error storing data in Elasticsearch: {str(e)}")
-
+            try:
+                # Index document into Elasticsearch
+                self.es.index(index=workspace_name, id=file_id, body=doc)
+                logger.info(f"Successfully indexed document with file_id {file_id}")
+                return file_id
+            except Exception as e:
+                logger.error(f"Error storing data in Elasticsearch for file {filename}: {str(e)}")
+                raise HTTPException(
+                    status_code=500, 
+                    detail=f"Error storing data in Elasticsearch: {str(e)}"
+                )
+        
     def retrieve_from_elastic(self, workspace_name: str, file_id: str) -> dict:
         
         try:
@@ -171,3 +176,5 @@ class ElasticsearchService:
             return response["_source"]
         except Exception as e:
             return {"error": f"Error retrieving data from {workspace_name}: {str(e)}"}
+
+elastic_service = ElasticsearchService()

@@ -4,10 +4,8 @@ import torch
 from ffmpeg import FFmpeg
 from fastapi import UploadFile
 from utils.diarization_utils import Diarization
-from utils.summarization_utils import Summarization
+from utils.summarization_utils import summarizer
 from utils.whisper_utils import transcribe_audio
-from utils.timestamp_embed_utils import TimestampEmbeddingService
-from utils.labse_utils import LaBSEEmbeddingService
 
 
 logging.basicConfig(level=logging.INFO)
@@ -16,9 +14,7 @@ logger = logging.getLogger(__name__)
 class FileProcessingService:
     def __init__(self):
         self.diarization = Diarization() 
-        self.summarize = Summarization()
-        self.labse_service = LaBSEEmbeddingService()
-        self.timestamp_service = TimestampEmbeddingService()
+        self.summarizer = summarizer
     
     async def process_audio_video_files(self, file: UploadFile):
 
@@ -29,38 +25,22 @@ class FileProcessingService:
 
             logger.info(f"Wav file path {wav_file_path}")
 
-            transcript, segments = transcribe_audio(wav_file_path)
-            logger.info(f"Segemnts inform: {segments[0]} are of type: {type(segments[0])}")
-
+            segments = transcribe_audio(wav_file_path)
+            
             # Perform Diarization 
-            # diarized_segments = await self.diarization.perform_diarization(wav_file_path) 
-            dummy_diarized_segment= [{'id': 0, 'seek': 0, 'start': 0.0, 'end': 6.7, 'text': ' A quantum computer is a digital computer capable of exploiting quantum coherence among the', 'tokens': [50364, 316, 13018, 3820, 307, 257, 4562, 3820, 8189, 295, 12382, 1748, 13018, 26528, 655, 3654, 264, 50699], 'temperature': 0.0, 'avg_logprob': -0.27646356640440045, 'compression_ratio': 1.38135593220339, 'no_speech_prob': 0.5273738503456116}, {'id': 1, 'seek': 0, 'start': 6.7, 'end': 10.0, 'text': ' physical two-state systems that store the binary arithmetic information.', 'tokens': [50699, 4001, 732, 12, 15406, 3652, 300, 3531, 264, 17434, 42973, 1589, 13, 50864], 'temperature': 0.0, 'avg_logprob': -0.27646356640440045, 'compression_ratio': 1.38135593220339, 'no_speech_prob': 0.5273738503456116}]
-            # Map the segments to transcript to ensure no issues with the segments.
-            # mapped_transcript = self.diarization.map_speaker_to_transcription_text(diarized_segments, segments)
+            diarized_segments = await self.diarization.perform_diarization(wav_file_path)
 
-            # combined_segments = self.diarization.map_speaker_to_transcription_text1(diarized_segments,segments)
-            formatted_transcript = await self.diarization.map_transcription_to_diarization(segments, dummy_diarized_segment)
-            logger.info(f"Formatted Segments: {formatted_transcript}")
-
-            # formatted_segments = self.diarization.format_combined_segments(combined_segments)
-            # logger.info(f"Formatted Segments: {formatted_segments}")
+            # Map the transcript segments to diarized segemnts.
+            formatted_transcript = await self.diarization.map_transcription_to_diarization(segments, diarized_segments)
+            logger.info(f"Segments mapped successfully.")
 
             # Generate LaBSE embeddings for the entire transcript
-            # transcript_embeddings = self.labse_service.generate_embeddings(mapped_transcript)
-            # logger.info(f"Transcript Embeddings generated successfully")
+            summary_results = self.summarizer.process_and_summarize_transcript(formatted_transcript)
+            logger.info(f"Summary and Transcript Embeddings generated successfully")
 
-            # Generate timestamp embeddings for segments
-            # timestamp_embeddings = self.timestamp_service.generate_timestamp_embeddings(segments)
-            # logger.info(f"Time stamp Embeddings generated successfully")
-
-            context = f"""
-                Transcript: {transcript}
-                Mapped Segments: {mapped_transcript}
-            """
-            summary = self.summarize.generate_summary(context)
-            logger.info("Summary is %s ", summary)
+            logger.info("Summary is %s ", summary_results.get("summary",""))
             
-            return transcript, summary, [], []
+            return summary_results
         except Exception as e :
             logger.error(f"Error : {e}")
             raise Exception
@@ -107,4 +87,4 @@ class FileProcessingService:
             logger.error(f"Error converting file {input_file_path} to .wav: {str(e)}")
             raise e
         
-    
+file_processing_service = FileProcessingService()

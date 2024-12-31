@@ -1,6 +1,9 @@
 from pydantic import BaseModel, EmailStr
 from typing import List
 
+class GoogleAuthRequest(BaseModel):
+    code: str  
+
 class WorkspaceRequest(BaseModel):
     workspace_name: str
 

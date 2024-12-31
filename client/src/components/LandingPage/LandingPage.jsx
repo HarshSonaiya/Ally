@@ -61,10 +61,15 @@ import { googleAuth } from '../../Api/axios';
 import Button from '../../components/ui/Button';
 import { assets } from '../../assets/assets';
 import './LandingPage.css';
+<<<<<<< Updated upstream
 import Hamburger from '../icons/HamBurger';
+=======
+import { googleAuth } from '../../Api/axios'; 
+>>>>>>> Stashed changes
 
 const Index = () => {
 
+<<<<<<< Updated upstream
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -79,6 +84,8 @@ const response = await ally.analyze({
   text: documentContent,
   type: 'document'
 });`;
+=======
+>>>>>>> Stashed changes
 
   const handleTokenRequest = async codeResponse => {
     try {
