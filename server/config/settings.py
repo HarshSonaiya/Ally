@@ -13,6 +13,7 @@ class AppSettings:
 
         self.GOOGLE_CLIENT_ID = os.getenv("CLIENT_ID")
         self.GOOGLE_CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+        self.AUTH_URL = os.getenv("AUTH_URL")
         self.TOKEN_URI = os.getenv("TOKEN_URI")  
         self.REDIRECT_URI = os.getenv("REDIRECT_URI")
         self.USER_INFO_URI = os.getenv("USER_INFO_URI")

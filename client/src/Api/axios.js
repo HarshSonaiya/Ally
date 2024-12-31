@@ -1,12 +1,11 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:9000/auth",
+  baseURL: "http://localhost:8000/auth",
 });
 
 export const googleAuth = async (code) => {
   try {
-    console.log("Request sent with auth-code:",code)
     const response = await api.post('/google-auth', {code}); 
     return response.data; 
   } catch (error) {

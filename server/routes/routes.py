@@ -5,7 +5,8 @@ from controllers import auth_controller, file_controller, workspace_controller
 router = APIRouter()
 
 # Authentication Route
-router.post("/auth/google-auth")(auth_controller.google_auth)  
+router.get("/auth/google-auth")(auth_controller.google_auth)  
+router.get("/google-callback")(auth_controller.google_callback)
 
 # Workspace Routes
 router.post("/workspace/create")(workspace_controller.create_workspace)

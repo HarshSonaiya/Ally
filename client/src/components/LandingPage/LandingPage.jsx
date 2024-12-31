@@ -1,75 +1,11 @@
-// import React, { useState } from 'react';
-// import { useGoogleLogin } from '@react-oauth/google';
-// import './LandingPage.css';
-// import { googleAuth } from '../../Api/axios'; // API call function to your backend
-
-// const LandingPage = ({ onLoginSuccess }) => {
-//   const [isSignUp, setIsSignUp] = useState(true);
-
-//   // const handleGoogleLogin = () => {
-//   //   const loginUrl = 'http://localhost:8000/login-redirect?auth_provider=google-oidc';
-//   //   window.location.href = loginUrl; // Redirect to backend for Google login
-//   // };
-
-//   const handleTokenRequest = async codeResponse => {
-//     try {
-//       const response = await googleAuth(codeResponse.code);
-//       if (response.data.userLoggedIn) {
-//         onLoginSuccess();
-//       } else {
-//         console.error('Failed to authenticate token');
-//       }
-//     } catch (error) {
-//       console.error('Error during login callback:', error);
-//     }
-//   }
-
-//   const handleGoogleLogin = useGoogleLogin({
-//     onSuccess: codeResponse => handleTokenRequest(codeResponse),
-//     flow: 'auth-code',
-//   });
-
-//   return (
-//     <div className="home-page">
-//       <div className="animated-background"></div>
-//       <div className="login-modal">
-//         <h1 className="app-title">Welcome to NAVIO</h1>
-//         <p className="auth-prompt">Please {isSignUp ? 'Sign up' : 'Login'} with Google to continue</p>
-//         <button
-//           className="google-login-button"
-//           onClick={handleGoogleLogin}
-//         >
-//           Continue with Google
-//         </button>
-//         <button
-//           className="toggle-auth"
-//           onClick={() => setIsSignUp(!isSignUp)}
-//         >
-//           {isSignUp ? 'Already have an account? Login' : "Don't have an account? Sign up"}
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default LandingPage;
-
-
 import React, { useState } from 'react';
-import { useGoogleLogin } from '@react-oauth/google';
-import { googleAuth } from '../../Api/axios';
 import Button from '../../components/ui/Button';
 import { assets } from '../../assets/assets';
 import './LandingPage.css';
-<<<<<<< Updated upstream
 import Hamburger from '../icons/HamBurger';
-=======
-import { googleAuth } from '../../Api/axios'; 
->>>>>>> Stashed changes
 
 const Index = () => {
 
-<<<<<<< Updated upstream
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -84,26 +20,11 @@ const response = await ally.analyze({
   text: documentContent,
   type: 'document'
 });`;
-=======
->>>>>>> Stashed changes
 
-  const handleTokenRequest = async codeResponse => {
-    try {
-      const response = await googleAuth(codeResponse.code);
-      if (response.data.userLoggedIn) {
-        // onLoginSuccess();
-      } else {
-        console.error('Failed to authenticate token');
-      }
-    } catch (error) {
-      console.error('Error during login callback:', error);
-    }
-  }
-
-  const handleGoogleLogin = useGoogleLogin({
-    onSuccess: codeResponse => handleTokenRequest(codeResponse),
-    flow: 'auth-code',
-  });
+  const handleGoogleLogin = () => {
+    const loginUrl = "http://localhost:8000/auth/google-auth";
+    window.location.href = loginUrl; 
+  };
 
   return (
     <div className="landing-page">
@@ -121,11 +42,11 @@ const response = await ally.analyze({
             <li><a href="#developer">Developer Portal</a></li>
           </ul>
           <div className="auth-buttons">
-            <Button variant="outline" size='sm' onClick={handleGoogleLogin}>Sign In</Button>
+            <Button size='sm' onClick={handleGoogleLogin}>Sign In</Button>
             {/* <Button size='sm'>Sign Up</Button> */}
           </div>
         </nav>
-        <Button variant="outline" className="menu-toggle" size="md" onClick={() => toggleMenu()}>
+        <Button variant="outline" className="menu-toggle" size="sm" onClick={() => toggleMenu()}>
           <Hamburger isOpen={menuOpen} />
           {/* Hello */}
         </Button>
@@ -165,12 +86,15 @@ const response = await ally.analyze({
         <h2>Try Ally Now</h2>
         <div className="chat-interface">
           <div className="chat-message ai">
+            <img src={assets.ally_icon} alt="ally_icon" />
             <p>Hello! How can I assist you today?</p>
           </div>
           <div className="chat-message user">
             <p>Can you help me analyze this document?</p>
+            <img src={assets.user} alt="user" />
           </div>
           <div className="chat-message ai">
+            <img src={assets.ally_icon} alt="ally_icon" />
             <p>{`Of course! Please share your document, and I'll analyze it for you.`}</p>
           </div>
         </div>
@@ -181,7 +105,7 @@ const response = await ally.analyze({
         <div className="content">
           <h2>Customize Your Experience</h2>
           <p>Build powerful AI-driven applications with our developer-friendly tools and APIs.</p>
-          <Button size='md'>Access Developer Portal</Button>
+          <Button size='sm'>Access Developer Portal</Button>
         </div>
         <div className="code-preview">
           <pre>

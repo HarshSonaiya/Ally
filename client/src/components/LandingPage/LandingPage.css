@@ -241,8 +241,9 @@ nav a {
 }
 
 .hero-right img {
-  width: 100%;
-  max-width: 600px;
+  border-radius: 5%;
+  max-width: 550px;
+  max-height: 570px;
 }
 
 /* Features Section */
@@ -315,12 +316,27 @@ nav a {
 }
 
 .chat-message.ai {
+  display: flex;
   background: #f0f4f8;
+  gap: 10px;
+}
+
+.chat-message.ai img {
+  width: 27px; 
+  height: 27px;
+  border-radius: 50%;
 }
 
 .chat-message.user {
+  display: flex;
   background: #e3f2fd;
-  margin-left: 2rem;
+  margin-left: 3rem;
+}
+
+.chat-message.user img {
+  width: 27px; 
+  height: 27px;
+  margin-left: 8.74rem;
 }
 
 /* Developer Tools Section */

@@ -13,8 +13,10 @@ import message_icon from "./message_icon.png";
 import code_icon from "./code_icon.png";
 import send_icon from "./send_icon.png";
 import gemini_icon from "./gemini_icon.png";
-import right_section from "./right_section.jpg";
+import right_section from "./right_section.jpeg";
+import ally_icon from "./ally_icon.ico"
 import logo from "./logo.png";
+import user from "./user.png"
 
 export const assets = {
   logo,
@@ -34,4 +36,6 @@ export const assets = {
   send_icon,
   gemini_icon,
   right_section,
+  ally_icon,
+  user,
 };
