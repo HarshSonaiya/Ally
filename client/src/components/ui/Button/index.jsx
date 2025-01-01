@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { cva } from "class-variance-authority";
+import clsx from "clsx";
 import styles from "./Button.module.css";
 
 // Use cva to define the dynamic class names
@@ -31,31 +32,21 @@ const buttonVariants = cva(
   }
 );
 
-// Define prop types explicitly
-// interface ButtonProps {
-//   variant?:
-//   | "default"
-//   | "destructive"
-//   | "outline"
-//   | "secondary"
-//   | "ghost"
-//   | "link";
-//   size?: "default" | "sm" | "lg" | "icon";
-//   //   children: React.ReactNode;
-//   disabled?: boolean;
-// }
-
 const Button = ({
   variant = "default",
   size = "default",
   disabled = false,
+  className = "",
   ...props
 }) => {
   // Apply the cva function to dynamically generate the class names
   const buttonClass = buttonVariants({ variant, size });
 
-  return <button className={buttonClass} disabled={disabled} {...props} />;
+  const combinedClass = clsx(buttonClass, className);
+
+  return <button className={combinedClass} disabled={disabled} {...props} />;
 };
+
 Button.propTypes = {
   variant: PropTypes.oneOf([
     "default",
@@ -67,6 +58,7 @@ Button.propTypes = {
   ]),
   size: PropTypes.oneOf(["default", "sm", "lg", "icon"]),
   disabled: PropTypes.bool,
+  className: PropTypes.string,
 };
 
 export default Button;

@@ -194,13 +194,15 @@ nav a {
 /* Hero Section */
 .hero {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
   padding: 8rem 5% 4rem;
   /* text-align: center; */
+  gap: 2rem;
   background: linear-gradient(to bottom, #f8f9fa, #ffffff);
 }
 
 .hero-left {
+  /* width: 15rem; */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -237,13 +239,15 @@ nav a {
   justify-content: right;
   align-items: center;
   border-radius: 1rem;
-  padding-left: 1rem;
+  /* padding-left: 1rem; */
 }
 
 .hero-right img {
   border-radius: 5%;
-  max-width: 550px;
-  max-height: 570px;
+  max-width: 34.375rem;
+  width: 100%;
+  height: auto;
+  /* max-height: 34.375rem; */
 }
 
 /* Features Section */
@@ -301,7 +305,7 @@ nav a {
 }
 
 .chat-interface {
-  max-width: 600px;
+  max-width: 37.5rem;
   margin: 0 auto;
   background: white;
   border-radius: 12px;
@@ -322,21 +326,23 @@ nav a {
 }
 
 .chat-message.ai img {
-  width: 27px; 
-  height: 27px;
+  width: 1.7rem;
+  height: 1.7rem;
   border-radius: 50%;
 }
 
 .chat-message.user {
   display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   background: #e3f2fd;
   margin-left: 3rem;
 }
 
 .chat-message.user img {
-  width: 27px; 
-  height: 27px;
-  margin-left: 8.74rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  /* margin-right: 1rem; */
 }
 
 /* Developer Tools Section */
@@ -413,7 +419,7 @@ footer {
   display: grid;
   grid-template-columns: 2fr 3fr;
   gap: 4rem;
-  max-width: 1200px;
+  max-width: 75rem;
   margin: 0 auto;
 }
 
@@ -445,7 +451,7 @@ footer {
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
+@media (max-width: 63.75rem) {
   .developer-tools {
     grid-template-columns: 1fr;
   }
@@ -464,7 +470,7 @@ footer {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
   /* header {
     padding: 1rem;
   }
