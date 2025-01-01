@@ -30,4 +30,9 @@ class AppSettings:
         self.HUGGING_FACE_ACCESS_TOKEN = os.getenv("HUGGING_FACE_ACCESS_TOKEN")
         self.EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
 
+        self.MONGO_INITDB_DATABASE = os.getenv("MONGO_INITDB_DATABASE")
+        self.DATABASE_URL = os.getenv("DATABASE_URL")
+        self.MONGO_USERNAME = os.getenv("MONGO_USERNAME")
+        self.MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
+
 settings = AppSettings()
