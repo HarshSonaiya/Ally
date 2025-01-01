@@ -23,7 +23,7 @@ const response = await ally.analyze({
 
   const handleGoogleLogin = () => {
     const loginUrl = "http://localhost:8000/auth/google-auth";
-    window.location.href = loginUrl; 
+    window.location.href = loginUrl;
   };
 
   return (
@@ -87,10 +87,10 @@ const response = await ally.analyze({
         <div className="chat-interface">
           <div className="chat-message ai">
             <img src={assets.ally_icon} alt="ally_icon" />
-            <p>Hello! How can I assist you today?</p>
+            <p>{"Hello! How can I assist you today?"}</p>
           </div>
           <div className="chat-message user">
-            <p>Can you help me analyze this document?</p>
+            <p>{"Can you help me analyze this document?"}</p>
             <img src={assets.user} alt="user" />
           </div>
           <div className="chat-message ai">

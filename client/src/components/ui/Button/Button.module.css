@@ -37,7 +37,7 @@
 }
 
 .variantDestructive {
-  background-color: var(--destructive) !important;
+  background-color: var(--destructive);
   color: var(--destructive-foreground);
 }
 
@@ -57,31 +57,30 @@
 }
 
 .variantSecondary {
-  background-color: var(--secondary) !important;
-  color: var(--secondary-foreground) !important;
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
 }
 
 .variantSecondary:hover {
-  background-color: rgba(var(--secondary-rgb), 0.8) !important;
+  background-color: rgba(var(--secondary-rgb), 0.8);
 }
 
 .variantGhost {
   background-color: transparent;
-  color: var(--accent-foreground) !important;
+  color: var(--accent-foreground);
 }
 
-.variantGhost:hover {
-  background-color: var(--accent) !important;
-  color: var(--accent-foreground) !important;
+.variantGhost:active {
+  background-color: rgba(var(--accent-rgb), 0.1);
 }
 
 .variantLink {
   color: var(--primary);
-  text-decoration: underline !important;
+  text-decoration: underline;
 }
 
 .variantLink:hover {
-  text-decoration: underline !important;
+  text-decoration: underline;
 }
 
 /* Button Sizes */
