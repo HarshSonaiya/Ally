@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Button from '../../components/ui/Button';
 import { assets } from '../../assets/assets';
 import './LandingPage.css';
-import Hamburger from '../icons/HamBurger';
+import Hamburger from '../../components/icons/HamBurger';
 
 const Index = () => {
 
