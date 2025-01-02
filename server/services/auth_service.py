@@ -42,11 +42,18 @@ class AuthService:
             token_response = requests.post(self.GOOGLE_TOKEN_URI, data=token_data)
             if token_response.status_code != 200:
                 raise Exception(f"Token exchange failed: {token_response.text}")
+            print(f"Token exchanged successfully {token_response}")
             
             tokens = token_response.json()
             access_token = tokens.get('access_token')
+            refresh_token = tokens.get('refresh_token')
+            expires_in = tokens.get('expires_in')
 
-            return {"access_token":access_token}
+            return {
+                "access_token":access_token,
+                "refresh_token":refresh_token,
+                "expires_in":expires_in
+            }
         except Exception as e:
             logger.error(f"Error occured: {e}")
             raise e

@@ -1,14 +1,15 @@
 import logging
-import time
+from datetime import datetime, timezone
 
 from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse, JSONResponse
 
-from models.pydantic_models import GoogleAuthRequest
+from pymongo.errors import DuplicateKeyError
+from models.user_model import UserModel
 
 from services.auth_service import authservice
 from utils.helper import send_response, handle_exception
-from config import get_es_client, settings
+from config import get_es_client, settings, db_instance
 
 # Configure logging
 logging.basicConfig(
@@ -21,6 +22,43 @@ logger = logging.getLogger("authcontroller")
 class AuthController:
     def __init__(self):
         self.es_client = get_es_client()
+        self.user_collection = db_instance.get_collection(
+            settings.MONGO_INITDB_DATABASE, "users"
+        )
+
+    async def store_user(self, user_data: dict) -> dict:
+        try:
+            # Validate user data using Pydantic
+            user = UserModel(**user_data)
+
+            # Insert user into MongoDB
+            self.user_collection.insert_one(user_data)
+            return {"message": "User created successfully", "user": user_data}
+
+        except DuplicateKeyError:
+            # If the user already exists, update the last login timestamp
+            existing_user = self.user_collection.find_one_and_update(
+                {"email": user_data["email"]},
+                {
+                    "$set": {
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                        "is_new": False,
+                        "access_token": user["access_token"],
+                        "refresh_token": user["refresh_token"]
+                    }
+                },
+                return_document=True,
+            )
+            if not existing_user:
+                raise HTTPException(
+                    status_code=500, detail="Failed to update user data."
+                )
+            return {
+                "message": "User already exists, updated successfully",
+                "user": existing_user,
+            }
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error storing user: {str(e)}")
 
     async def google_auth(self):
         """
@@ -32,6 +70,9 @@ class AuthController:
             f"&client_id={settings.GOOGLE_CLIENT_ID}"
             f"&redirect_uri={settings.REDIRECT_URI}"
             f"&scope=openid email profile"
+            f"&access_type=offline"
+            f"&include_granted_scopes=true"
+            f"&prompt=consent"
         )
         return RedirectResponse(google_oauth_url)
 
@@ -48,8 +89,10 @@ class AuthController:
             logger.info(f"Login request with code: {auth_code}")
 
             # Get access token from Google
-            access_token_response = await authservice.get_access_token(auth_code)
-            access_token = access_token_response.get("access_token")
+            token_response = await authservice.get_access_token(auth_code)
+            access_token = token_response.get("access_token")
+            refresh_token = token_response.get("refresh_token")
+            expires_in = token_response.get("expires_in")
 
             logger.info(f"Access token received : {access_token}")
             if not access_token:
@@ -74,10 +117,23 @@ class AuthController:
                     status_code=400, detail="Incomplete user info from Google"
                 )
 
-            # Store records in mongodb and return success message with username -> pending.
+            # Store records in mongodb and return success message with username
+            user_data = {
+                "email": email,
+                "google_id": google_id,
+                "username": user_info.get("name"),
+                "profile_picture": user_info.get("picture"),
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "expires_in" : expires_in
+            }
+
+            user_storage_result = await self.store_user(user_data)
+            logger.info(f"User storage result: {user_storage_result}")
 
             # Redirect to the frontend with the success message in URL query parameters
-            redirect_url = f"http://localhost:5173/home?message=Authentication+successful"
+            redirect_url = f"http://localhost:5173/home?message=Authentication+successful&username={user_info.get('name')}"
+
             return RedirectResponse(url=redirect_url)
         except Exception as e:
             logger.error(f"Error in Google auth: {e}")

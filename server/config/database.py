@@ -1,20 +1,24 @@
 from pymongo import MongoClient
 import urllib.parse
-import pymongo
-from settings import settings
+from config import settings
 
-username = urllib.parse.quote_plus(settings.MONGO_USERNAME)
-password = urllib.parse.quote_plus(settings.MONGO_PASSWORD)
+class Database:
+    def __init__(self):
+        username = urllib.parse.quote_plus(settings.MONGO_USERNAME)
+        password = urllib.parse.quote_plus(settings.MONGO_PASSWORD)
+        try:
+            self.client = MongoClient(settings.DATABASE_URL % (username, password))
+            conn_info = self.client.server_info()
+            print(f"Connected to MongoDB: Version {conn_info.get('version')}")
+        except Exception as e:
+            raise ConnectionError(f"Unable to connect to MongoDB: {str(e)}")
 
-client = MongoClient(settings.DATABASE_URL % (username, password))
+    def get_database(self, db_name: str):
+        return self.client[db_name]
 
-try:
-    conn = client.server_info()
-    print(f'Connected to MongoDB {conn.get("version")}')
-except Exception:
-    print("Unable to connect to the MongoDB server.")
+    def get_collection(self, db_name: str, collection_name: str):
+        db = self.get_database(db_name)
+        return db[collection_name]
 
-db = client[settings.MONGO_INITDB_DATABASE]
-User = db.users
-User.create_index([("email", pymongo.ASCENDING)], unique=True)
-
+# Initialize database instance
+db_instance = Database()
