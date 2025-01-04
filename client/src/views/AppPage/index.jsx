@@ -1,13 +1,14 @@
 import React from 'react';
 import Sidebar from '../../components/ui/Sidebar';
 import MainSection from '../../components/Main';
+import './AppPage.css';
 
 export default function AppPage() {
   return (
-    <React.Fragment>
+    <main className='chat-page'>
       <Sidebar />
-      <MainSection />
-    </React.Fragment>
+      {/* <MainSection /> */}
+    </main>
   );
 }
 

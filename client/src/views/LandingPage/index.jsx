@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Button from '../../components/ui/Button';
 import { assets } from '../../assets/assets';
 import './LandingPage.css';
-import Hamburger from '../../components/icons/HamBurger';
+import { Hamburger } from '../../components/icons';
 
 const Index = () => {
 
@@ -47,7 +47,7 @@ const response = await ally.analyze({
           </div>
         </nav>
         <Button variant="outline" className="menu-toggle" size="sm" onClick={() => toggleMenu()}>
-          <Hamburger isOpen={menuOpen} />
+          <Hamburger />
           {/* Hello */}
         </Button>
       </header>

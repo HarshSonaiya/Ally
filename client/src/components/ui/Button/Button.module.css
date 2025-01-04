@@ -67,7 +67,11 @@
 
 .variantGhost {
   background-color: transparent;
-  color: var(--accent-foreground);
+  color: var(--accent-accent);
+}
+
+.variantGhost:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .variantGhost:active {

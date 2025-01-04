@@ -1,4 +1,4 @@
-.sidebar{
+/* .sidebar{
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -6,7 +6,7 @@
     background-color: rgb(205, 224, 249);
     padding: 25px 15px;
     width: 5rem;
-    transition: width 0.3s ease;
+    transition: width 0.3s ease-in-out;
     overflow: hidden;
 }
 
@@ -72,4 +72,200 @@
 .sidebar .bottom-item{
     padding-right: 10px;
     cursor: pointer;
+} */
+
+.sidebar {
+  width: 20rem;
+  height: 100%;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0rem;
+  gap: 0rem;
+  /* flex-wrap: wrap; */
+  align-content: flex-start;
+  opacity: 1;
+  background: #ffffff;
+  box-sizing: border-box;
+  border-width: 0rem 0.063rem 0rem 0rem;
+  border-style: solid;
+  border-color: #e5e7eb;
+  transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out,
+    visibility 0s linear 0.3s;
+  z-index: 0;
+  /* border: 2px solid red; */
+}
+
+.hide__sidebar {
+  width: 0rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out,
+    visibility 0s linear 0.3s;
+}
+
+.sidebar__header,
+.sidebar__button-container,
+.sidebar__chat-list-container,
+.sidebar__footer {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.hide__sidebar .sidebar__header,
+.hide__sidebar .sidebar__button-container,
+.hide__sidebar .sidebar__chat-list-container,
+.hide__sidebar .sidebar__footer {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.sidebar__header {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  row-gap: 0rem;
+  flex-wrap: wrap;
+  align-content: center;
+  z-index: 1;
+}
+
+.sidebar__header-icon {
+  display: flex;
+  cursor: pointer;
+}
+
+.sidebar__header-logo img {
+  width: 3rem;
+}
+
+.sidebar__button-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  padding-top: 0.5rem;
+  gap: 0rem 0.625rem;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  z-index: 1;
+  /* border: 2px solid red; */
+}
+
+.sidebar__button {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.sidebar__chat-list {
+  /* height: 80%; */
+  display: flex;
+  flex-direction: column;
+  padding: 0rem 1rem;
+  gap: 0rem 0.625rem;
+  /* flex-wrap: wrap; */
+  align-content: flex-start;
+  flex-grow: 1;
+  overflow-y: auto;
+  z-index: 1;
+  /* border: 2px solid red; */
+}
+
+.sidebar__chat-header {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #6a6c6e;
+}
+
+.sidebar__chat-items {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 0rem;
+  /* border-radius: 0.625rem; */
+  cursor: pointer;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+  flex-grow: 1;
+  /* border: 2px solid red; */
+}
+
+.sidebar__chat-items::-webkit-scrollbar {
+  width: 8px; /* Thin scrollbar */
+}
+
+.sidebar__chat-items::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+  border-radius: 10px;
+}
+
+.sidebar__chat-items::-webkit-scrollbar-thumb {
+  background-color: #888; /* Darker thumb */
+  border-radius: 10px;
+}
+
+.sidebar__chat-items::-webkit-scrollbar-thumb:hover {
+  background-color: #555; /* Even darker on hover */
+}
+
+.sidebar__chat-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.325rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  background-color: #e1f1f1;
+}
+
+.sidebar__chat-item-button {
+  height: fit-content;
+  width: fit-content;
+  padding: 0;
+}
+
+.sidebar__footer {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 0.325rem 0rem;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  z-index: 3;
+}
+
+.sidebar__footer-button {
+  width: 100%;
+  height: 2rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.625rem;
+  /* padding: 0rem; */
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  /* border: 2px solid red; */
+}
+
+.sidebar__footer-icon {
+  height: 1.5rem;
+  width: 1.5rem;
 }
