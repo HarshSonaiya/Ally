@@ -11,6 +11,7 @@ lerna-debug.log*
 node_modules
 .env
 .env.*
+.env
 
 # Python Byte-compiled files
 *.pyc
@@ -24,7 +25,7 @@ env/
 venv/
 ENV/
 myenv
-.env
+
 
 
 # Build artifacts
