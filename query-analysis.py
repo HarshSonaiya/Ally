@@ -21,36 +21,26 @@ summarizer = pipeline("summarization", model="t5-small")
 
 # === Helper Functions ===
 
-def compute_similarity(query, pdf_text):
-    """Compute the similarity score between the query and PDF text."""
+def compute_similarity(query, pdf_chunks):
+    """Compute similarity scores for query and multiple PDF chunks."""
     try:
         query_embedding = similarity_model.encode([query])
-        pdf_embedding = similarity_model.encode([pdf_text])
-        similarity = cosine_similarity(query_embedding, pdf_embedding)
-        return similarity[0][0]
+        pdf_embeddings = similarity_model.encode(pdf_chunks)  # Batch encode PDF chunks
+        similarities = cosine_similarity(query_embedding, pdf_embeddings)
+        return similarities[0]  # Return similarity scores for all chunks
     except Exception as e:
         return f"Error during similarity computation: {str(e)}"
 
-def handle_web_search(query):
-    """Handle Google web search for the query."""
-    try:
-        service = build("customsearch", "v1", developerKey=GOOGLE_API_KEY)
-        result = service.cse().list(q=query, cx=GOOGLE_CSE_ID).execute()
-        items = result.get("items", [])
-        if items:
-            return "\n".join([f"{item['title']}: {item['link']}" for item in items[:3]])
-        else:
-            return "\nNo search results found."
-    except Exception as e:
-        return f"\nError during web search: {str(e)}"
-
 def extract_relevant_text(query, pdf_text, threshold=0.3):
-    """Extract the most relevant section from the PDF based on query similarity."""
+    """Extract the most relevant sections from the PDF based on query similarity."""
     try:
-        pdf_chunks = pdf_text.split(". ")
-        similarities = [compute_similarity(query, chunk) for chunk in pdf_chunks]
-        most_relevant_chunk = pdf_chunks[similarities.index(max(similarities))]
-        if max(similarities) > threshold:
+        # Split by paragraphs instead of sentences for better context capture
+        pdf_chunks = pdf_text.split("\n\n")  # Splitting by double newline (paragraphs)
+        similarities = compute_similarity(query, pdf_chunks)
+        max_similarity_index = similarities.argmax()
+        most_relevant_chunk = pdf_chunks[max_similarity_index]
+
+        if similarities[max_similarity_index] > threshold:
             return most_relevant_chunk
         else:
             return "No relevant information found in the PDF."
@@ -75,6 +65,19 @@ def summarize_text(text, min_length=30, max_length=None):
     except Exception as e:
         return f"Error during summarization: {str(e)}"
 
+def handle_web_search(query):
+    """Handle Google web search for the query."""
+    try:
+        service = build("customsearch", "v1", developerKey=GOOGLE_API_KEY)
+        result = service.cse().list(q=query, cx=GOOGLE_CSE_ID).execute()
+        items = result.get("items", [])
+        if items:
+            return "\n".join([f"{item['title']}: {item['link']}" for item in items[:3]])
+        else:
+            return "\nNo search results found."
+    except Exception as e:
+        return f"\nError during web search: {str(e)}"
+
 def handle_answer_from_pdf(query, pdf_path):
     """Handle query and extract a summarized answer from PDF."""
     try:
@@ -96,15 +99,19 @@ def handle_summarize(pdf_path, min_length=50, max_length=150):
         summary = summarize_text(pdf_text, min_length=min_length, max_length=max_length)
         return f"\nSummarized PDF content:\n{summary}"
     except Exception as e:
-        return f"\n\nError during summarization: {str(e)}"
+        return f"\nError during summarization: {str(e)}"
 
 def classify_intent(query, pdf_path=None):
     """Classify the user's intent based on the query."""
     query = query.strip().lower()
     if "summarize" in query:
         return "summarize"
-    if "pdf" in query and pdf_path:
-        return "answer_from_pdf"
+    if pdf_path:  # Allow dynamic PDF intent classification
+        with pdfplumber.open(pdf_path) as pdf:
+            pdf_text = " ".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+            similarity = compute_similarity(query, [pdf_text])  # Compare query with entire PDF content
+            if similarity[0] > 0.3:  # Dynamic threshold
+                return "answer_from_pdf"
     return "web_search"
 
 def handle_user_query(query, pdf_path=None):
@@ -119,9 +126,9 @@ def handle_user_query(query, pdf_path=None):
         elif intent == "summarize" and pdf_path:
             return handle_summarize(pdf_path)
         else:
-            return f"\n\nInvalid or unsupported intent for query: {query}"
+            return f"\nInvalid or unsupported intent for query: {query}"
     except Exception as e:
-        return f"\n\nError handling query: {str(e)}"
+        return f"\nError handling query: {str(e)}"
 
 if __name__ == "__main__":
     pdf_path = input("\nEnter the path to the PDF file: ")
