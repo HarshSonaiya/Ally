@@ -1,66 +1,24 @@
-// import React from "react";
-// import "./mainSection.css";
-// import { assets } from "../../assets/assets";
-
-// const Main = () => {
-//   return (
-//     <div className="main">
-//       <div className="nav">
-//         <p>Navio</p>
-//       </div>
-//       <div className="main-container">
-//         <div className="greet">
-//           <p>
-//             <span>Hey there!</span>
-//           </p>
-//           <p>What can I do to assist you?</p>
-//         </div>
-//         <div className="cards">
-//           <div className="card">
-//             <p>Summarize a concept</p>
-//           </div>
-//           <div className="card">
-//             <p>Tell me some international news.</p>
-//           </div>
-//           <div className="card">
-//             <p>{"Know about the latest happenings in the Tech. Industry."}</p>
-//             <p>{"Know about the latest happenings in the Tech. Industry."}</p>
-//           </div>
-//           <div className="card">
-//             <p>Want to learn a about a new technology.</p>
-//           </div>
-//         </div>
-//         <div className="main-bottom">
-//           <div className="search-box">
-//             <input type="text" placeholder="What do you want to ask?" />
-//             <div>
-//               <img src={assets.gallery_icon} alt="" />
-//               <img src={assets.web_icon} alt="" />
-//               <img src={assets.send_icon} alt="" />
-//             </div>
-//           </div>
-//           <p className="bottom-info">
-//             {
-//               "Note that the information provided by Navio may not always be fully accurate. We recommend verifying any details independently to ensure correctness."
-//             }
-//           </p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Main;
-
-import React from 'react';
-import Button from '../ui/Button';
 import SidepanelIcon from '../icons/SidepanelIcon';
-import './mainSection.css';
 import PlusIcon from '../icons/PlusIcon';
+import { useState } from "react";
+import Button from "../ui/Button";
+import "./mainSection.css";
+import PropTypes from 'prop-types';
 
-export default function index({ hidden, setHidden }) {
+export default function MainSection({ hidden, setHidden }) {
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
+
+    setMessages([...messages, { text: inputText, type: "user" }]);
+    setInputText("");
+  };
+
   return (
-    <section className='main-section'>
+    <section className="main-section">
       <div className="composer-parent">
         <div className="composer-header">
           {!!hidden && <Button variant="ghost" size='icon' onClick={() => setHidden(() => false)}>
@@ -71,14 +29,51 @@ export default function index({ hidden, setHidden }) {
             <PlusIcon />
           </Button>
         </div>
-      </div>
-      <div>
-        <div className="chat-container">
-          <div></div>
-          <textarea className="chat-input" name="chat__ip" id="chat__ip"></textarea>
-          <Button></Button>
+        <div className={`chat-content ${!messages.length ? "center-content" : ""}`}>
+          {messages.length === 0 ? (
+            <div className="welcome-container">
+              <h1>How can I help you today?</h1>
+              <p className="subtitle">Ask me anything...</p>
+            </div>
+          ) : (
+            <div className="messages-container">
+              {messages.map((message, index) => (
+                <div key={index} className={`message ${message.type}`}>
+                  {message.text}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
+      <div className={`chat-input-wrapper ${!messages.length ? "center-position" : ""}`}>
+        <form onSubmit={handleSubmit} className="chat-input-container">
+          <textarea
+            className="chat-input styled-textarea"
+            placeholder="Send a message..."
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            rows={1}
+            style={{ height: !messages.length ? "60px" : "auto" }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+              }
+            }}
+          />
+          <Button variant="ghost" size="icon" className="send-button" onClick={handleSubmit} type="submit">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Button>
+        </form>
       </div>
     </section>
   );
 }
+
+MainSection.propTypes = {
+  hidden: PropTypes.bool.isRequired,
+  setHidden: PropTypes.func.isRequired,
+};
