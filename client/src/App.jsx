@@ -23,7 +23,7 @@ const App = () => {
       <Routes>
         {/* Directly render HomePage */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/app" element={<AppPage />} />
+        <Route path="/chat" element={<AppPage />} />
 
         {/* Fallback Route */}
         < Route path="*" element={<PageNotFound />} />
