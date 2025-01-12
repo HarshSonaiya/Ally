@@ -4,9 +4,9 @@ import { assets } from '../../../assets/assets';
 import Button from '../Button';
 import { HelpIcon, MinusIcon, MoreIcon, PlusIcon, SettingsIcon } from "../../icons"
 
-export default function Sidebar() {
+export default function Sidebar({ hidden, setHidden }) {
 
-    const [hidden, setHidden] = useState(false);
+    // const [hidden, setHidden] = useState(false);
     const [recentChats, setRecentChats] = useState([
         {
             title: "What is React ???"

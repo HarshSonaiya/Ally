@@ -54,20 +54,29 @@
 
 import React from 'react';
 import Button from '../ui/Button';
+import SidepanelIcon from '../icons/SidepanelIcon';
+import './mainSection.css';
+import PlusIcon from '../icons/PlusIcon';
 
-export default function index() {
+export default function index({ hidden, setHidden }) {
   return (
     <section className='main-section'>
-      <div>
-        <div>
-          <div></div>
-          <textarea name="chat__ip" id="chat__ip"></textarea>
-          <Button></Button>
+      <div className="composer-parent">
+        <div className="composer-header">
+          {!!hidden && <Button variant="ghost" size='icon' onClick={() => setHidden(() => false)}>
+            <SidepanelIcon className="sidepanel-icon" />
+          </Button>}
+          <h1>Chat with us</h1>
+          <Button variant="ghost" size='icon'>
+            <PlusIcon />
+          </Button>
         </div>
       </div>
       <div>
-        <div>
-
+        <div className="chat-container">
+          <div></div>
+          <textarea className="chat-input" name="chat__ip" id="chat__ip"></textarea>
+          <Button></Button>
         </div>
       </div>
     </section>
