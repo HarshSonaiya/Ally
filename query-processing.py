@@ -1,268 +1,432 @@
-import os
-from typing import List, Optional, Tuple, Dict
+import re
+import json
+import requests
+from pathlib import Path
+from typing import List, Dict, Tuple, Optional, Set
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.llms import HuggingFaceHub
-from langchain.prompts import PromptTemplate
-from langchain.tools import Tool
-from langchain_community.utilities import GoogleSearchAPIWrapper
-from langchain_community.utilities import WikipediaAPIWrapper
-from langchain_community.tools import DuckDuckGoSearchRun
-from langchain.schema import Document
+from transformers import pipeline, AutoTokenizer
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from googleapiclient.discovery import build
 
-# === API Configuration ===
-HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+# Download required NLTK resources
+nltk.download('punkt')
+nltk.download('stopwords')
 
-if not HUGGINGFACE_API_TOKEN:
-    raise ValueError(
-        "HuggingFace API token not found. Please set the HUGGINGFACEHUB_API_TOKEN environment variable."
-    )
+# API Keys Configuration
+GOOGLE_API_KEY = "AIzaSyANqoN3lv3kBmT8Z4tdN8ZP7Fryoph1ScU"
+GOOGLE_CSE_ID = "90b7425b7daa646e8"
 
-# === Model Initialization ===
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
-    model_kwargs={'device': 'cpu'}
-)
+class GoogleSearchManager:
+    def __init__(self, api_key: str, cse_id: str):
+        self.api_key = api_key
+        self.cse_id = cse_id
+        self.service = build("customsearch", "v1", developerKey=api_key)
 
-llm = HuggingFaceHub(
-    repo_id="google/flan-t5-base",
-    huggingfacehub_api_token=HUGGINGFACE_API_TOKEN,
-    model_kwargs={
-        "temperature": 0.5,
-        "max_length": 512,
-        "truncation": True
-    }
-)
+    def search(self, query: str, num_results: int = 5) -> List[Dict]:
+        try:
+            results = []
+            search_results = self.service.cse().list(
+                q=query,
+                cx=self.cse_id,
+                num=num_results
+            ).execute()
 
-def clean_text(text: str) -> str:
-    """Clean text by removing excessive whitespace and newlines."""
-    # Replace multiple newlines with a single newline
-    text = ' '.join(text.split())
-    # Fix spacing after punctuation
-    text = text.replace(' .', '.').replace(' ,', ',')
-    # Add proper spacing for readability
-    text = text.replace('.', '. ').replace(',', ', ')
-    return text
-
-class DocumentProcessor:
-    def __init__(self):
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,  # Reduced chunk size for more granular matching
-            chunk_overlap=100
-        )
-        self.vectorstore = None
-        self.full_text = None
-
-    def load_pdf(self, pdf_path: str) -> List:
-        """Load and split PDF document."""
-        loader = PyPDFLoader(pdf_path)
-        documents = loader.load()
-        
-        # Clean and concatenate all text
-        cleaned_texts = [clean_text(doc.page_content) for doc in documents]
-        self.full_text = "\n\n".join(cleaned_texts)
-        
-        # Create smaller chunks for better matching
-        splits = []
-        for doc in documents:
-            cleaned_text = clean_text(doc.page_content)
-            # Split into paragraphs
-            paragraphs = [p.strip() for p in cleaned_text.split('\n\n') if p.strip()]
-            
-            for para in paragraphs:
-                splits.append(Document(
-                    page_content=para,
-                    metadata={"source": pdf_path, "type": "pdf"}
-                ))
-        
-        self.vectorstore = FAISS.from_documents(splits, embeddings)
-        return splits
-
-    def compute_similarity(self, query: str, k: int = 3) -> List[Tuple[float, str]]:
-        """Compute similarity between query and PDF content, return top k matches."""
-        if not self.vectorstore:
+            if 'items' in search_results:
+                for item in search_results['items']:
+                    content = f"{item.get('title', '')}\n{item.get('snippet', '')}"
+                    results.append({
+                        'content': content,
+                        'source': 'Google Search'
+                    })
+            return results
+        except Exception as e:
+            print(f"Error in Google search: {str(e)}")
             return []
-        
-        # Get top k similar documents and scores
-        docs_and_scores = self.vectorstore.similarity_search_with_score(query, k=k)
-        
-        # Return list of (score, content) tuples
-        return [(score, clean_text(doc.page_content)) 
-                for doc, score in docs_and_scores]
 
-    def get_relevant_content(self, query: str, k: int = 3) -> List:
-        """Get relevant content from PDF."""
-        if not self.vectorstore:
-            raise ValueError("No document loaded. Please load a PDF first.")
-        return self.vectorstore.similarity_search(query, k=k)
+class DocumentManager:
+    def __init__(self, embeddings):
+        self.embeddings = embeddings
+        self.documents = {}
+        self.vector_stores = {}
+        self.combined_vectorstore = None
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=500,
+            chunk_overlap=50,
+            separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""]
+        )
 
-    def summarize_content(self, text_or_docs) -> str:
-        """Summarize the provided content."""
-        if isinstance(text_or_docs, str):
-            docs = self.text_splitter.split_text(text_or_docs)
-        else:
-            docs = text_or_docs
-        
-        chain = load_summarize_chain(llm, chain_type="map_reduce")
-        return chain.run(docs)
-
-class WebSearchManager:
-    def __init__(self):
-        self.ddg_search = DuckDuckGoSearchRun()
-        self.wikipedia = WikipediaAPIWrapper()
-        
+    def add_pdf(self, pdf_path: str) -> bool:
         try:
-            self.google_search = GoogleSearchAPIWrapper(
-                google_api_key=os.getenv("GOOGLE_API_KEY"),
-                google_cse_id=os.getenv("GOOGLE_CSE_ID")
-            )
-        except Exception:
-            self.google_search = None
-    
-    def search(self, query: str) -> str:
-        results = []
-        
-        # Try DuckDuckGo
-        try:
-            ddg_result = self.ddg_search.run(query)
-            results.append(f"=== DuckDuckGo Results ===\n{ddg_result}")
-        except Exception as e:
-            print(f"DuckDuckGo search failed: {e}")
-        
-        # Try Wikipedia
-        try:
-            wiki_result = self.wikipedia.run(query)
-            results.append(f"=== Wikipedia Results ===\n{wiki_result}")
-        except Exception as e:
-            print(f"Wikipedia search failed: {e}")
-        
-        # Try Google if available
-        if self.google_search:
-            try:
-                google_result = self.google_search.run(query)
-                results.append(f"=== Google Results ===\n{google_result}")
-            except Exception as e:
-                print(f"Google search failed: {e}")
-        
-        return "\n\n".join(results) if results else "No search results found."
+            pdf_path = Path(pdf_path)
+            if not pdf_path.exists():
+                print(f"Error: File not found at {pdf_path}")
+                return False
 
-class QueryHandler:
-    def __init__(self):
-        self.doc_processor = DocumentProcessor()
-        self.web_searcher = WebSearchManager()
-        self.current_pdf = None
-        self.similarity_threshold = 0.5
+            loader = PyPDFLoader(str(pdf_path))
+            documents = loader.load()
 
-    def load_pdf(self, pdf_path: str):
-        """Load a new PDF document."""
-        self.current_pdf = pdf_path
-        return self.doc_processor.load_pdf(pdf_path)
+            texts = []
+            full_text = []
+            for doc in documents:
+                cleaned_text = ' '.join(doc.page_content.split())
+                chunks = self.text_splitter.split_text(cleaned_text)
+                texts.extend(chunks)
+                full_text.append(cleaned_text)
 
-    def handle_query(self, query: str, force_web: bool = False) -> Dict:
-        """Process user query and return results from PDF and web."""
-        try:
-            results = {
-                'sources': [],
-                'answers': [],
-                'similarity_scores': []
+            vectorstore = FAISS.from_texts(texts, self.embeddings)
+
+            doc_id = str(pdf_path.stem)
+            self.documents[doc_id] = {
+                'path': str(pdf_path),
+                'name': pdf_path.name,
+                'chunks': texts,
+                'full_text': '\n'.join(full_text)
             }
+            self.vector_stores[doc_id] = vectorstore
 
-            # If PDF is loaded and not forcing web search
-            if self.current_pdf and not force_web:
-                pdf_matches = self.doc_processor.compute_similarity(query)
-                for score, content in pdf_matches:
-                    if score > self.similarity_threshold:
-                        results['sources'].append('pdf')
-                        results['answers'].append(content)
-                        results['similarity_scores'].append(score)
+            self._update_combined_vectorstore()
+            print(f"Successfully added PDF: {pdf_path.name}")
+            return True
 
-            # If no good PDF matches or forcing web search
-            if not results['answers'] or force_web:
-                web_result = clean_text(self.web_searcher.search(query))
-                results['sources'].append('web')
-                results['answers'].append(web_result)
-                results['similarity_scores'].append(1.0)  # Default score for web results
+        except Exception as e:
+            print(f"Error adding PDF: {str(e)}")
+            return False
+
+    def _update_combined_vectorstore(self):
+        try:
+            all_texts = []
+            for doc_info in self.documents.values():
+                all_texts.extend(doc_info['chunks'])
+
+            if all_texts:
+                self.combined_vectorstore = FAISS.from_texts(all_texts, self.embeddings)
+        except Exception as e:
+            print(f"Error updating combined vector store: {str(e)}")
+
+    def get_relevant_content(self, query: str, threshold: float = 0.7) -> List[Dict]:
+        if not self.combined_vectorstore:
+            return []
+
+        try:
+            results = []
+            docs_and_scores = self.combined_vectorstore.similarity_search_with_score(query, k=5)
+
+            for doc, score in docs_and_scores:
+                if score <= threshold:
+                    results.append({
+                        'content': doc.page_content,
+                        'score': score,
+                        'source': 'PDF'
+                    })
 
             return results
+        except Exception as e:
+            print(f"Error retrieving relevant content: {str(e)}")
+            return []
+
+    def list_documents(self) -> List[Dict]:
+        """Return list of all documents with their details."""
+        return [
+            {'id': doc_id, 'name': info['name'], 'path': info['path']}
+            for doc_id, info in self.documents.items()
+        ]
+
+    def get_document_by_id(self, doc_id: str) -> Optional[Dict]:
+        """Get document information by ID."""
+        return self.documents.get(doc_id)
+
+class EnhancedSummarizer:
+    def __init__(self, model_name: str = "facebook/bart-large-cnn"):
+        self.model_name = model_name
+        self.summarizer = pipeline("summarization", model=model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    def clean_text(self, text: str) -> str:
+        """Clean text by removing URLs, references, and contact information."""
+        # Remove URLs
+        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
+        # Remove social media references
+        text = re.sub(r'@\w+', '', text)
+        # Remove email addresses
+        text = re.sub(r'\S+@\S+', '', text)
+        # Remove phone numbers
+        text = re.sub(r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b', '', text)
+        # Remove follow/contact references
+        text = re.sub(r'(?i)(follow us|contact us|call|visit|www|http).+', '', text)
+        # Remove extra whitespace
+        text = ' '.join(text.split())
+        return text
+
+    def summarize(self, text: str, summary_type: str = 'concise') -> str:
+        if not text.strip():
+            return "No content available for summarization."
+
+        # Clean the text before summarization
+        text = self.clean_text(text)
+
+        ratios = {
+            'concise': (0.1, 0.3),
+            'detailed': (0.3, 0.6),
+            'comprehensive': (0.5, 0.8)
+        }
+        min_ratio, max_ratio = ratios.get(summary_type, (0.1, 0.3))
+
+        max_chunk_length = 1024
+        chunks = self._split_text(text, max_chunk_length)
+        summaries = []
+
+        for chunk in chunks:
+            input_length = len(self.tokenizer.encode(chunk))
+            max_length = max(int(input_length * max_ratio), 50)
+            min_length = max(int(input_length * min_ratio), 30)
+
+            try:
+                summary = self.summarizer(chunk, max_length=max_length, min_length=min_length, do_sample=False)
+                summaries.append(summary[0]['summary_text'])
+            except Exception as e:
+                print(f"Error in summarization: {str(e)}")
+                continue
+
+        final_summary = ' '.join(summaries) if summaries else "Error generating summary."
+        # Clean the summary again to ensure no unwanted content slips through
+        return self.clean_text(final_summary)
+
+    def _split_text(self, text: str, max_length: int) -> List[str]:
+        """Split text into chunks of maximum token length."""
+        tokens = self.tokenizer.encode(text)
+        chunks = []
+        current_chunk = []
+        current_length = 0
+
+        for token in tokens:
+            if current_length >= max_length:
+                chunks.append(self.tokenizer.decode(current_chunk))
+                current_chunk = []
+                current_length = 0
+            current_chunk.append(token)
+            current_length += 1
+
+        if current_chunk:
+            chunks.append(self.tokenizer.decode(current_chunk))
+
+        return chunks
+
+class AdvancedQuerySystem:
+    def __init__(self):
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_kwargs={'device': 'cpu'}
+        )
+        self.doc_manager = DocumentManager(self.embeddings)
+        self.summarizer = EnhancedSummarizer()
+        self.google_search = GoogleSearchManager(GOOGLE_API_KEY, GOOGLE_CSE_ID)
+        self.use_web_search = None
+
+    def set_web_search_preference(self, use_web: bool):
+        """Set user preference for web search"""
+        self.use_web_search = use_web
+        print(f"\nWeb search has been {'enabled' if use_web else 'disabled'}.")
+
+    def process_query(self, query: str) -> Dict:
+        try:
+            # First check PDF results with a more lenient threshold
+            pdf_results = self.doc_manager.get_relevant_content(query, threshold=0.9)  # Increased threshold to be more inclusive
+            
+            if pdf_results:
+                # Sort results by score to get most relevant first
+                pdf_results.sort(key=lambda x: x['score'])
+                
+                # Take up to top 3 most relevant results
+                top_results = pdf_results[:3]
+                
+                # Check if results are too weak (all scores above 0.85)
+                if all(result['score'] > 0.85 for result in top_results):
+                    if self.use_web_search:
+                        # Try web search as results are weak
+                        google_results = self.google_search.search(query)
+                        if google_results:
+                            combined_text = ' '.join([result['content'] for result in google_results])
+                            summary = self.summarizer.summarize(combined_text, 'concise')
+                            return {
+                                'source': 'Google Search (PDF results were too weak)',
+                                'result': summary
+                            }
+                
+                # Use PDF results even if somewhat weak
+                combined_text = ' '.join([result['content'] for result in top_results])
+                summary = self.summarizer.summarize(combined_text, 'concise')
+                confidence_level = "high" if any(result['score'] < 0.7 for result in top_results) else "moderate"
+                return {
+                    'source': f'PDF (Confidence: {confidence_level})',
+                    'result': summary
+                }
+            
+            # If no PDF results at all and web search is enabled
+            if self.use_web_search:
+                google_results = self.google_search.search(query)
+                if google_results:
+                    combined_text = ' '.join([result['content'] for result in google_results])
+                    summary = self.summarizer.summarize(combined_text, 'concise')
+                    return {
+                        'source': 'Google Search',
+                        'result': summary
+                    }
+            
+            # Only return no results if truly nothing found
+            return {
+                'source': 'System',
+                'result': "No relevant information found in the documents. " + 
+                        ("Consider enabling web search for broader results." if not self.use_web_search else 
+                        "Try rephrasing your query to be more specific.")
+            }
 
         except Exception as e:
             return {
-                'sources': ['error'],
-                'answers': [f"Error processing query: {str(e)}"],
-                'similarity_scores': [0.0]
+                'source': 'Error',
+                'result': f"Error processing query: {str(e)}"
+        }
+
+    def add_pdf_document(self, pdf_path: str):
+        """Add a PDF document to the system."""
+        return self.doc_manager.add_pdf(pdf_path)
+
+    def summarize_pdf(self, doc_id: str, summary_type: str = 'concise') -> Dict:
+        """Summarize a specific PDF document."""
+        doc = self.doc_manager.get_document_by_id(doc_id)
+        if not doc:
+            return {
+                'success': False,
+                'message': f"Document with ID '{doc_id}' not found.",
+                'summary': None
+            }
+
+        try:
+            text = self.summarizer.clean_text(doc['full_text'])
+            summary = self.summarizer.summarize(text, summary_type)
+            return {
+                'success': True,
+                'message': 'Summary generated successfully.',
+                'summary': summary,
+                'document_name': doc['name']
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error generating summary: {str(e)}",
+                'summary': None
             }
 
 def main():
-    handler = QueryHandler()
-    
+    system = AdvancedQuerySystem()
+
     while True:
-        print("\n" + "="*50)
-        print("Query System")
-        print("="*50)
-        print("\nOptions:")
-        print("1. Load PDF")
-        print("2. Query (Auto-decides between PDF and Web)")
-        print("3. Force Web Search")
-        print("4. Summarize Current PDF")
-        print("5. Exit")
-        
-        choice = input("\nEnter your choice (1-5): ")
-        
-        if choice == "1":
-            pdf_path = input("Enter the path to the PDF file: ")
-            try:
-                handler.load_pdf(pdf_path)
-                print("\nSuccess: PDF loaded successfully!")
-            except Exception as e:
-                print(f"\nError: Failed to load PDF - {e}")
+        print("\n=== Advanced Query System Menu ===")
+        print("1. Add PDF Document")
+        print("2. Query Mode")
+        print("3. Summarize PDF")
+        print("4. List Documents")
+        print("5. Toggle Web Search")
+        print("6. Exit")
+        choice = input("Enter your choice (1-6): ")
 
-        elif choice == "2":
-            query = input("Enter your query: ")
-            results = handler.handle_query(query)
-            
-            print("\n" + "="*50)
-            print("Query Results")
-            print("="*50)
-            
-            # Display main results
-            for idx, (source, answer, score) in enumerate(
-                zip(results['sources'], results['answers'], results['similarity_scores']), 1
-            ):
-                print(f"\nResult {idx}:")
-                print(f"Source: {source.upper()}")
-                print(f"Confidence Score: {score:.2f}")
-                print("-" * 30)
-                print(answer)
+        if choice == '1':
+            pdf_path = input("Enter PDF path: ")
+            if system.add_pdf_document(pdf_path):
+                # Only ask for web search preference after successful PDF addition
+                if system.use_web_search is None:
+                    while True:
+                        web_choice = input("\nWould you like to enable web-based answers for queries not found in PDFs? (yes/no): ").lower()
+                        if web_choice in ['yes', 'no']:
+                            system.set_web_search_preference(web_choice == 'yes')
+                            break
+                        print("Please enter 'yes' or 'no'.")
 
-        elif choice == "3":
-            query = input("Enter your web search query: ")
-            results = handler.handle_query(query, force_web=True)
-            print("\nWeb Search Results:")
-            print("-" * 30)
-            for answer in results['answers']:
-                print(answer)
-
-        elif choice == "4":
-            if not handler.current_pdf:
-                print("\nError: No PDF loaded. Please load a PDF first!")
+        elif choice == '2':
+            if not system.doc_manager.list_documents():
+                print("Please add at least one PDF document before querying.")
                 continue
-            try:
-                summary = handler.doc_processor.summarize_content(handler.doc_processor.full_text)
-                print("\nPDF Summary:")
-                print("-" * 30)
-                print(clean_text(summary))
-            except Exception as e:
-                print(f"\nError generating summary: {e}")
+                
+            while True:
+                query = input("\nEnter your query (or 'back' to return to the main menu): ")
+                if query.lower() == 'back':
+                    break
+                result = system.process_query(query)
+                print(f"\nSource: {result['source']}")
+                print(f"Result: {result['result']}")
 
-        elif choice == "5":
-            print("\nThank you for using the Query System. Goodbye!")
+        elif choice == '3':
+            documents = system.doc_manager.list_documents()
+            if not documents:
+                print("No documents available. Please add some PDFs first.")
+                continue
+
+            print("\nAvailable Documents:")
+            for doc in documents:
+                print(f"ID: {doc['id']} - Name: {doc['name']}")
+
+            doc_id = input("\nEnter document ID to summarize: ")
+            print("\nSummary Types:")
+            print("1. Concise")
+            print("2. Detailed")
+            print("3. Comprehensive")
+            summary_type = input("Choose summary type (1-3): ")
+            
+            summary_types = {
+                '1': 'concise',
+                '2': 'detailed',
+                '3': 'comprehensive'
+            }
+            
+            summary_result = system.summarize_pdf(
+                doc_id, 
+                summary_types.get(summary_type, 'concise')
+            )
+
+            if summary_result['success']:
+                print(f"\nSummary of {summary_result['document_name']}:")
+                print(summary_result['summary'])
+            else:
+                print(f"\nError: {summary_result['message']}")
+
+        elif choice == '4':
+            documents = system.doc_manager.list_documents()
+            if not documents:
+                print("No documents available. Please add some PDFs first.")
+                continue
+
+            print("\nLoaded Documents:")
+            for doc in documents:
+                print(f"ID: {doc['id']}")
+                print(f"Name: {doc['name']}")
+                print(f"Path: {doc['path']}")
+                print("-" * 50)
+
+        elif choice == '5':
+            if system.use_web_search is None:
+                print("Please add a PDF document first before configuring web search.")
+                continue
+                
+            current_status = "enabled" if system.use_web_search else "disabled"
+            print(f"\nWeb search is currently {current_status}")
+            while True:
+                choice = input("Would you like to toggle web search? (yes/no): ").lower()
+                if choice in ['yes', 'no']:
+                    if choice == 'yes':
+                        system.set_web_search_preference(not system.use_web_search)
+                    break
+                print("Please enter 'yes' or 'no'.")
+
+        elif choice == '6':
+            print("\nThank you for using Advanced Query System. Goodbye!")
             break
-        
+
         else:
-            print("\nError: Invalid choice. Please try again.")
+            print("\nInvalid choice. Please enter a number between 1 and 6.")
 
 if __name__ == "__main__":
     main()
