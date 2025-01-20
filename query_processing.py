@@ -12,14 +12,15 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from googleapiclient.discovery import build
+import os
 
 # Download required NLTK resources
 nltk.download('punkt')
 nltk.download('stopwords')
 
 # API Keys Configuration
-GOOGLE_API_KEY = "AIzaSyANqoN3lv3kBmT8Z4tdN8ZP7Fryoph1ScU"
-GOOGLE_CSE_ID = "90b7425b7daa646e8"
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID")
 
 class GoogleSearchManager:
     def __init__(self, api_key: str, cse_id: str):
