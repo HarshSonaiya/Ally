@@ -1,0 +1,87 @@
+.chat-content {
+  width: 100%;
+  height: 100%;
+  max-height: 100vh;
+  flex: 1;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+  /* border: 2px solid red; */
+}
+
+.center-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-container {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.welcome-container h1 {
+  font-size: 2.5rem;
+  background: linear-gradient(90deg, #007bff, #00bcd4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 1.2rem;
+}
+
+/* Scroll content container */
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 56.25rem;
+  /* height: 100%; */
+  padding: 1rem 0rem;
+  gap: 1rem;
+  flex-grow: 1;
+  margin-inline: auto;
+  /* overflow-y: auto; */
+}
+
+/* Message box */
+.message {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* User role styling */
+.user-message {
+  height: fit-content;
+  width: fit-content;
+  max-width: 60%;
+  margin-left: auto;
+  padding: 0.625rem;
+  border-radius: 0.625rem;
+  background-color: rgba(13, 66, 137, 0.1);
+  word-wrap: break-word;
+  white-space: pre-line;
+}
+
+.assistant-message {
+  height: fit-content;
+  width: fit-content;
+  margin-right: auto; /* Replace with primary-blue/10 */
+}
+
+/* Error message */
+.error {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: #e53e3e; /* text-error-red */
+}
+
+/* Additional margin-top for error when content is present */
+.error.mt-2 {
+  margin-top: 0.5rem;
+}

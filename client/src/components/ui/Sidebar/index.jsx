@@ -9,7 +9,7 @@ export default function Sidebar({ hidden, setHidden }) {
     // const [hidden, setHidden] = useState(false);
     const [recentChats, setRecentChats] = useState([
         {
-            title: "What is React ???"
+            title: "What is React ??? sjssssssssssssssssss"
         },
         {
             title: "What is React ???"
