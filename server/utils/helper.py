@@ -26,6 +26,9 @@ def send_response(status_code: int, message: str, data: dict = None):
         "message": message,
         "data": data or None
     }
+    
+    logger.info(response)
+    
     return response
 
 def handle_exception(error: Exception, status_code: int = 500):

@@ -1,16 +1,24 @@
-import SidepanelIcon from '../icons/SidepanelIcon';
-import PlusIcon from '../icons/PlusIcon';
-import { useEffect, useState } from "react";
-import Button from "../ui/Button";
-import "./mainSection.css";
 import PropTypes from 'prop-types';
+import { useEffect, useState } from "react";
+import Select from 'react-select';
+// import { parseSSEStream } from "../../utils/utils";
+import { createProject, getProjects } from '../../Api/handlers/chatHandler';
+import Button from "../ui/Button";
+import { PopoverRoot, PopoverTrigger, PopoverContent, Popover, PopoverFooter, PopoverAction, PopoverTitle } from '../../components/ui/Popover'; // Import components from your popover file
 import ChatInput from '../ChatInput';
 import ChatMessages from '../ChatMessages';
+import SidepanelIcon from '../icons/SidepanelIcon';
+// import PlusIcon from '../icons/PlusIcon';
+import "./mainSection.css";
 
 export default function MainSection({ hidden, setHidden }) {
-  const [chatId, setChatId] = useState(null);
+  // const [chatId, setChatId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [isPopoverVisible, setPopoverVisible] = useState(false);
+  const [projectName, setProjectName] = useState('');
+
+  const [projects, setProjects] = useState([]);
 
   const isLoading = messages.length && messages[messages.length - 1].loading;
 
@@ -23,15 +31,6 @@ export default function MainSection({ hidden, setHidden }) {
     { role: 'assistant', content: '', sources: [], loading: true }
     ]);
     setNewMessage('');
-
-
-    // let chatIdOrNew = chatId;
-    // try {
-    // if (!chatId) {
-    //   const { id } = await api.createChat();
-    //   setChatId(id);
-    //   chatIdOrNew = id;
-    // }
 
     setTimeout(() => {
       console.log(messages);
@@ -47,67 +46,41 @@ export default function MainSection({ hidden, setHidden }) {
         updatedMessages[updatedMessages.length - 1].loading = false;
         return updatedMessages;
       });
-
-      // setMessages(prev => {
-      //   prev[prev.length - 1].content = "Hello, how can I help you today?";
-      // });
-      // setMessages(prev => {
-      //   prev[prev.length - 1].loading = false;
-      // });
     }, 2000);
-    // } catch (err) {
-    //   console.log(err);
-    //   setMessages(draft => {
-    //     draft[draft.length - 1].loading = false;
-    //     draft[draft.length - 1].error = true;
-    //   });
-    // }
   }
 
-  useEffect(() => {
-    console.log(messages);
-
-  }, [messages]);
-
   // TODO: replace with actual API call
-  /*
-    async function submitNewMessage() {
-      const trimmedMessage = newMessage.trim();
-      if (!trimmedMessage || isLoading) return;
-  
-      setMessages(draft => [...draft,
-      { role: 'user', content: trimmedMessage },
-      { role: 'assistant', content: '', sources: [], loading: true }
-      ]);
-      setNewMessage('');
-  
-      // TODO: replace with actual API call
-      let chatIdOrNew = chatId;
-      try {
-        if (!chatId) {
-          const { id } = await api.createChat();
-          setChatId(id);
-          chatIdOrNew = id;
-        }
-  
-        const stream = await api.sendChatMessage(chatIdOrNew, trimmedMessage);
-        for await (const textChunk of parseSSEStream(stream)) {
-          setMessages(draft => {
-            draft[draft.length - 1].content += textChunk;
-          });
-        }
-        setMessages(draft => {
-          draft[draft.length - 1].loading = false;
-        });
-      } catch (err) {
-        console.log(err);
-        setMessages(draft => {
-          draft[draft.length - 1].loading = false;
-          draft[draft.length - 1].error = true;
-        });
-      }
+
+  useEffect(() => {
+    async function fetchProjects() {
+      const response = await getProjects();
+
+      setProjects(response.map(project => ({ value: project.workspace_id, label: project.workspace_name })));
+
     }
-  */
+    fetchProjects();
+  }, []);
+
+  async function handleCreateProject() {
+    const response = await createProject({ workspace_name: projectName });
+
+    console.log("Response: ", response);
+
+    if (response.status_code === 200) {
+      alert("Project created successfully!");
+    }
+
+    // console.log("Creating project...");
+  }
+
+  function handleOpenPopover() {
+    setPopoverVisible(true); // Show the popover when button is clicked
+  }
+
+  const handleClosePopover = () => {
+    setPopoverVisible(false); // Close popover when clicking outside or on close action
+  };
+
   return (
     <section className="main-section">
       <div className="composer-parent">
@@ -115,10 +88,61 @@ export default function MainSection({ hidden, setHidden }) {
           {!!hidden && <Button variant="ghost" size='icon' onClick={() => setHidden(() => false)}>
             <SidepanelIcon className="sidepanel-icon" />
           </Button>}
-          <h1>Chat with us</h1>
-          <Button variant="ghost" size='icon'>
-            <PlusIcon />
-          </Button>
+
+          {!!projects.length && <Select
+            options={projects}
+            defaultValue={projects[0]}
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                width: 200,
+                height: 30,
+                borderRadius: 5,
+                border: '1px solid #E5E7EB',
+                fontSize: 16,
+                color: '#4B5563',
+                backgroundColor: '#F3F4F6',
+                boxShadow: 'none',
+                '&:hover': {
+                  border: '1px solid #E5E7EB',
+                },
+              }),
+            }}
+          />}
+
+          <PopoverRoot>
+            <PopoverTrigger>
+              <Button size="sm" onClick={handleOpenPopover}>
+                {/* <PlusIcon /> */}
+                {"New Project"}
+              </Button>
+            </PopoverTrigger>
+
+            <Popover
+              isOpen={isPopoverVisible}
+              onClose={handleClosePopover}
+              align="top-right"
+              offset={50}
+              className="mainsection-popover"
+            >
+              <PopoverContent className="mainsection-popover-content">
+                <PopoverTitle>Create a New Project</PopoverTitle>
+                <input
+                  type="text"
+                  placeholder="Enter project name"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  className="input-field"
+                />
+              </PopoverContent>
+
+              <PopoverFooter className="mainsection-popover-footer">
+                <PopoverAction onClick={handleCreateProject}>
+                  <Button size='sm'>Create Project</Button>
+                </PopoverAction>
+              </PopoverFooter>
+            </Popover>
+          </PopoverRoot>
         </div>
         <ChatMessages messages={messages} isLoading={isLoading} />
       </div>
@@ -131,48 +155,3 @@ MainSection.propTypes = {
   hidden: PropTypes.bool.isRequired,
   setHidden: PropTypes.func.isRequired,
 };
-
-/*
-      <div className={`chat-input-wrapper ${!messages.length ? "center-position" : ""}`}>
-        <form onSubmit={handleSubmit} className="chat-input-container">
-          <textarea
-            className="chat-input styled-textarea"
-            placeholder="Send a message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            rows={1}
-            style={{ height: !messages.length ? "60px" : "auto" }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-              }
-            }}
-          />
-          <Button variant="ghost" size="icon" className="send-button" onClick={handleSubmit} type="submit">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Button>
-        </form>
-      </div>
-*/
-
-/*
-        <div className={`chat-content ${!messages.length ? "center-content" : ""}`}>
-          {messages.length === 0 ? (
-            <div className="welcome-container">
-              <h1>How can I help you today?</h1>
-              <p className="subtitle">Ask me anything...</p>
-            </div>
-          ) : (
-            <div className="messages-container">
-              {messages.map((message, index) => (
-                <div key={index} className={`message ${message.type}`}>
-                  {message.text}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-*/

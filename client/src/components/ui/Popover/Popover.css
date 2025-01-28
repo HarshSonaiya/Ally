@@ -1,0 +1,110 @@
+/* animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.popover {
+  position: fixed;
+  z-index: 1000;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  min-width: 200px;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.95);
+  will-change: transform, opacity;
+}
+
+.visible {
+  animation: fadeIn 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: all;
+}
+
+.popover:not(.visible) {
+  animation: fadeOut 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.top {
+  transform: translateY(-10px) scale(0.95);
+}
+
+.topRight {
+  transform: translate(-10px, -10px) scale(0.95);
+}
+
+.right {
+  transform: translateX(10px) scale(0.95);
+}
+
+.bottomRight {
+  transform: translate(-10px, 10px) scale(0.95);
+}
+
+.bottom {
+  transform: translateY(10px) scale(0.95);
+}
+
+.bottomLeft {
+  transform: translate(10px, 10px) scale(0.95);
+}
+
+.left {
+  transform: translateX(-10px) scale(0.95);
+}
+
+.topLeft {
+  transform: translate(10px, -10px) scale(0.95);
+}
+
+.center {
+  transform: scale(0.95);
+}
+
+.popoverTrigger {
+  display: inline-block;
+  cursor: pointer;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+.popoverContent {
+  padding: 10px;
+}
+
+.popoverHeader {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.popoverFooter {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.popoverTitle {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}

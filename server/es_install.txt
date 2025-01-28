@@ -1,0 +1,178 @@
+Install Docker on Ubuntu 20.04
+
+The first step is to have docker-engine/ docker desktop installed. 
+
+Step 1: Updating the Software Repository
+
+sudo apt update
+
+Step 2: Downloading Dependencies
+
+sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+
+Step 3: Adding Docker’s GPG Key
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+Step 4: Installing the Docker Repository
+
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu  $(lsb_release -cs)  stable"
+
+
+Step 5: Installing the Latest Docker
+
+sudo apt update
+Now you can install the latest Docker version with:
+sudo apt-get install docker-ce
+
+
+Step 6: Verifying Docker Installation
+
+docker --version
+
+
+Step 7: Enable Docker Service
+To start the Docker service run the following commands:
+
+sudo systemctl start docker
+
+Enable Docker to run at startup with:
+
+sudo systemctl enable docker
+
+To check the status of the service, use the command:
+
+sudo systemctl status docker
+
+Output: Docker should show active (running)
+
+
+
+
+Install Docker Compose on Ubuntu
+
+Step 1: Upgrade and Update
+
+sudo apt update
+
+Then, upgrade the system to ensure all local packages and programs are up to date:
+
+sudo apt upgrade
+
+Step 2: Install curl
+
+Note: if you have already installed curl then skip this step 2. To check if its installed type curl
+or install it by:
+
+sudo apt install curl
+
+
+
+Step 3: Download the Latest Docker Version
+
+sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+Step 4: Change File Permission
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+Step 5: Check Docker Compose Version
+
+docker-compose version
+
+
+
+
+
+Create a folder name of your choice in the home directory
+
+After creating the folder of your choice, open the terminal from that directory 
+
+Step 1: paste the docker-compose.yml file into the folder
+
+the docker-compose.yml file is available in the drive only 
+
+Note: copy the path of your folder which you have created and make the changes in the docker-compose.yml file on line number 16.
+
+From: 
+
+/home/rahul/es-docker-volume-mount:/usr/share/elasticsearch/data
+
+To:
+
+“your folder path”:/usr/share/elasticsearch/data
+
+
+
+Step 2: Run the docker-compose file
+
+docker-compose up -d
+
+Output: This will install the elasticsearch and kibana version of 7.17.3 and will create 2 containers named “elasticsearch” and “kibana” which will take a couple of minutes.
+
+Step 2: check the containers if its up and running state
+
+sudo docker ps -a
+
+Execution
+
+The Elasticsearch and Kibana have been installed in docker.
+
+Step 1: Check elasticsearch by running:
+
+localhost:9200
+
+Step 2: Check kibana by running:
+
+localhost:5601
+
+
+Version 8.13.2 Docker Compose file
+
+version: '3'
+services:
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
+    # 8.x
+    environment: ['CLI_JAVA_OPTS=-Xms2g -Xmx2g','bootstrap.memory_lock=true','discovery.type=single-node','xpack.security.enabled=false', 'xpack.security.enrollment.enabled=false', 'ES_JAVA_OPTS=-Xms512m -Xmx512m']
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    deploy:    
+      resources:
+          limits:
+            cpus: '2.0'
+          reservations:
+            cpus: '1.0'
+    restart: always
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.2
+    container_name: kibana
+    environment:
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: d1a66dfd-c4d3-4a0a-8290-2abcb83ab3aa
+    ports:
+      - 5601:5601
+    networks:
+      - elastic
+    deploy:    
+      resources:
+          limits:
+            cpus: '2.0'
+          reservations:
+            cpus: '1.0'
+    restart: always
+
+networks:
+  elastic:
+
+

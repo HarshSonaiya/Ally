@@ -67,3 +67,36 @@
   z-index: 90;
   /* border: 2px solid red; */
 }
+
+.input-field {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--background);
+  border: 2px solid var(--input);
+  border-radius: 0.5rem;
+}
+
+.mainsection-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--background);
+  border: 1px solid var(--input);
+}
+
+.mainsection-popover-content {
+  display: flex;
+  flex-direction: column;
+  /* justify-content: ; */
+  align-items: center;
+  gap: 0.5rem;
+  height: 100%;
+}
+
+.mainsection-popover-footer {
+  display: flex;
+  justify-content: end;
+  padding-bottom: 0.325rem;
+  padding-right: 0.325rem;
+}

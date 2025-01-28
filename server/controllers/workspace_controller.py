@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from models.pydantic_models import WorkspaceRequest
 from services import elastic_service
 import logging
+from utils.helper import send_response
 
 
 logging.basicConfig(level=logging.INFO)
@@ -23,8 +24,9 @@ class WorkspaceController:
             dict: Success or error message.
         """
         try:
+            logger.info(f"Creating workspace: {workspace.workspace_name}")
             await self.elastic_service.create_workspace_index(workspace.workspace_name)
-            return {"message": "Workspace created successfully"}
+            return send_response(200, f"Workspace '{workspace.workspace_name}' created successfully", data=workspace.workspace_name)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error creating workspace: {e}")
     

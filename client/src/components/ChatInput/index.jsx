@@ -1,11 +1,16 @@
+import { useRef, useState } from 'react';
 import useAutosize from '../../hooks/useAutosize';
-import { SendIcon } from '../icons';
+import { GlobeIcon, PaperclipIcon, SendIcon } from '../icons';
 import Button from '../ui/Button';
 import "./chatInput.css";
 import PropTypes from 'prop-types';
 
 function ChatInput({ newMessage, setNewMessage, messages, isLoading, submitNewMessage }) {
+
+    const [isWebSearch, setIsWebSearch] = useState(false);
+
     const textareaRef = useAutosize(newMessage);
+    const fileRef = useRef(null);
 
     function handleKeyDown(e) {
         if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
@@ -47,6 +52,31 @@ function ChatInput({ newMessage, setNewMessage, messages, isLoading, submitNewMe
                     onKeyDown={handleKeyDown}
                 />
                 <div className="send-button-wrapper">
+
+                    <div className="button-group">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="attachment-button"
+                        >
+                            <label htmlFor="file-upload">
+                                <input
+                                    type="file"
+                                    id="file-upload"
+                                    accept=".pdf, .mp4, .wav"
+                                    style={{ display: 'none' }}
+                                    ref={fileRef}
+                                />
+                                <PaperclipIcon height='20' width='20' />
+                            </label>
+                        </Button>
+
+                        <Button variant="ghost" size="icon" onClick={() => setIsWebSearch(!isWebSearch)} className={`web-search-button ${isWebSearch ? 'active' : ''}`} >
+                            <GlobeIcon height="20" width="20" style={{ stroke: isWebSearch ? '#3F00FF' : '#000000' }} />
+                        </Button>
+
+                    </div>
+
                     <Button
                         variant="ghost"
                         size="icon"

@@ -1,3 +1,7 @@
+svg {
+  cursor: pointer;
+}
+
 .circle-error-icon {
   fill: none;
   stroke: currentColor;
@@ -7,6 +11,14 @@
 }
 
 .circle-user-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.globe-icon {
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -49,6 +61,14 @@
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5; /* Adjusted stroke width for the smaller icon */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.paperclip-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }

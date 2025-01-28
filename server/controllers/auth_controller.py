@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException, Request, Response
 from fastapi.responses import RedirectResponse, JSONResponse
 
 from pymongo.errors import DuplicateKeyError
@@ -76,7 +76,7 @@ class AuthController:
         )
         return RedirectResponse(google_oauth_url)
 
-    async def google_callback(self, request: Request):
+    async def google_callback(self, request: Request, response: Response):
 
         try:
             auth_code = request.query_params.get("code")
@@ -132,9 +132,27 @@ class AuthController:
             logger.info(f"User storage result: {user_storage_result}")
 
             # Redirect to the frontend with the success message in URL query parameters
-            redirect_url = f"http://localhost:5173/home?message=Authentication+successful&username={user_info.get('name')}"
+            # Redirect to the frontend with the success message in URL query parameters
+            redirect_url = (
+                f"http://localhost:5173/chat"
+                f"?message=Authentication+successful"
+                f"&username={user_info.get('name')}"
+                f"&email={email}"
+                f"&profile_picture={user_info.get('picture')}"
+                f"&access_token={access_token}"
+            )
+            
+            # Set the refresh token in an HTTP-only cookie
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                httponly=True,
+                secure=True,
+                samesite="Lax",
+                max_age=60 * 60 * 24 * 30,
+            )
 
-            return RedirectResponse(url=redirect_url)
+            return RedirectResponse(url=redirect_url, headers=response.headers)
         except Exception as e:
             logger.error(f"Error in Google auth: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")

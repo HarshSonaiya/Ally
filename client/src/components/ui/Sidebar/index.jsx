@@ -3,8 +3,19 @@ import './Sidebar.css';
 import { assets } from '../../../assets/assets';
 import Button from '../Button';
 import { HelpIcon, MinusIcon, MoreIcon, PlusIcon, SettingsIcon } from "../../icons"
+import { useNavigate } from 'react-router-dom';
 
 export default function Sidebar({ hidden, setHidden }) {
+
+    const navigate = useNavigate();
+
+    function handleLogout() {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('email');
+        localStorage.removeItem('profile_picture');
+        localStorage.removeItem('username');
+        navigate('/');
+    }
 
     // const [hidden, setHidden] = useState(false);
     const [recentChats, setRecentChats] = useState([
@@ -99,7 +110,8 @@ export default function Sidebar({ hidden, setHidden }) {
             {/* </div> */}
             <div className="sidebar__footer">
                 <Button variant='ghost' size='sm' className="sidebar__footer-button"><SettingsIcon />{"Settings"}</Button>
-                <Button variant='ghost' size='sm' className="sidebar__footer-button"><HelpIcon />{"Help & FAQs"}</Button>
+                {/* <Button variant='ghost' size='sm' className="sidebar__footer-button"><HelpIcon />{"Help & FAQs"}</Button> */}
+                <Button variant='ghost' size='sm' onClick={handleLogout} className="sidebar__footer-button">{"Logout"}</Button>
             </div>
         </aside>
     )

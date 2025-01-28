@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import { assets } from '../../assets/assets';
 import './LandingPage.css';
 import { Hamburger } from '../../components/icons';
+import { use } from 'react';
 
 const Index = () => {
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [auth, setAuth] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const access_token = localStorage.getItem('access_token');
+    if (access_token) {
+      setAuth(access_token);
+    }
+  }, []);
+
 
   const toggleMenu = () => {
     setMenuOpen(prevState => !prevState);
@@ -24,7 +36,15 @@ const response = await ally.analyze({
   const handleGoogleLogin = () => {
     const loginUrl = "http://localhost:8000/auth/google-auth";
     window.location.href = loginUrl;
+    // navigate(loginUrl);
   };
+
+  function handleLogout() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('email');
+    localStorage.removeItem('profile_picture');
+    localStorage.removeItem('username');
+  }
 
   return (
     <div className="landing-page">
@@ -42,8 +62,9 @@ const response = await ally.analyze({
             <li><a href="#developer">Developer Portal</a></li>
           </ul>
           <div className="auth-buttons">
-            <Button size='sm' onClick={handleGoogleLogin}>Sign In</Button>
-            {/* <Button size='sm'>Sign Up</Button> */}
+            {!auth ? <><Button size='sm' variant='outline' onClick={handleGoogleLogin}>Sign In</Button>
+              <Button size='sm' onClick={handleGoogleLogin}>Sign Up</Button> </>
+              : <Button size='sm' onClick={handleLogout}>Logout</Button>}
           </div>
         </nav>
         <Button variant="outline" className="menu-toggle" size="sm" onClick={() => toggleMenu()}>

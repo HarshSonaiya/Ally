@@ -23,18 +23,18 @@ class ElasticsearchService:
         """
 
         # Check for workspace with existing name
-        response = self.es.search(
-                index="workspace_mappings",
-                body={
-                "query": {
-                    "term": { "workspace_name.keyword": workspace_name }  
-                }
-            }
-        )
+        # response = self.es.search(
+        #         index="workspace_mappings",
+        #         body={
+        #         "query": {
+        #             "term": { "workspace_name.keyword": workspace_name }  
+        #         }
+        #     }
+        # )
         
-        # If any hits are found, the workspace already exists
-        if response['hits']['total']['value'] > 0:
-            return {"error": f"Workspace {workspace_name} already exists."}
+        # # If any hits are found, the workspace already exists
+        # if response['hits']['total']['value'] > 0:
+        #     return {"error": f"Workspace {workspace_name} already exists."}
 
         index_name = uuid.uuid4().hex
         response = self.es.indices.create(
