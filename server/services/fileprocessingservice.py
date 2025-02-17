@@ -21,14 +21,14 @@ class FileProcessingService:
         try:
             file_path = await self.save_file_temporarily(file)
 
-            wav_file_path = self.convert_to_wav(file_path)
+            # wav_file_path = self.convert_to_wav(file_path)
 
-            logger.info(f"Wav file path {wav_file_path}")
+            # logger.info(f"Wav file path {wav_file_path}")
 
-            segments = transcribe_audio(wav_file_path)
+            text, segments = transcribe_audio(file_path)
             
             # Perform Diarization 
-            diarized_segments = await self.diarization.perform_diarization(wav_file_path)
+            diarized_segments = await self.diarization.perform_diarization(file_path)
 
             # Map the transcript segments to diarized segemnts.
             formatted_transcript = await self.diarization.map_transcription_to_diarization(segments, diarized_segments)
@@ -40,14 +40,13 @@ class FileProcessingService:
 
             logger.info("Summary is %s ", summary_results.get("summary",""))
             
-            return summary_results
+            return summary_results.get("summary","")
         except Exception as e :
             logger.error(f"Error : {e}")
             raise Exception
         finally:
-            os.remove(wav_file_path)
-            os.remove(file_path)
- 
+            pass
+        
     async def save_file_temporarily(self, file: UploadFile):
         # Ensure the 'uploads' directory exists
         upload_dir = "uploads"

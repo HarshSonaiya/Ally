@@ -1,8 +1,11 @@
 import uuid
+import tqdm
 from config import get_es_client
 from fastapi import HTTPException
 import logging
-
+from langchain.docstore.document import Document
+from typing import List
+from elasticsearch.helpers import bulk
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,18 +26,18 @@ class ElasticsearchService:
         """
 
         # Check for workspace with existing name
-        # response = self.es.search(
-        #         index="workspace_mappings",
-        #         body={
-        #         "query": {
-        #             "term": { "workspace_name.keyword": workspace_name }  
-        #         }
-        #     }
-        # )
+        response = self.es.search(
+                index="workspace_mappings",
+                body={
+                "query": {
+                    "term": { "workspace_name.keyword": workspace_name }  
+                }
+            }
+        )
         
-        # # If any hits are found, the workspace already exists
-        # if response['hits']['total']['value'] > 0:
-        #     return {"error": f"Workspace {workspace_name} already exists."}
+        # If any hits are found, the workspace already exists
+        if response['hits']['total']['value'] > 0:
+            return {"error": f"Workspace {workspace_name} already exists."}
 
         index_name = uuid.uuid4().hex
         response = self.es.indices.create(
@@ -47,8 +50,9 @@ class ElasticsearchService:
                 "properties": {
                     "file_id": {"type": "keyword"},
                     "transcript": {"type": "text"},
-                    "participants": {"type": "keyword"},
                     "filename": {"type": "keyword"},
+                    "content_type": {"type": "keyword"}, # "transcript" or "pdf"
+                    "transcript": {"type": "text"},
                     "transcript_embeddings": {
                         "type": "nested",
                         "properties": {
@@ -60,9 +64,17 @@ class ElasticsearchService:
                                 "dims": 768  
                             }
                         }
+                        }
+                    },
+                    "pdf_text": {"type": "text"},
+                    "pdf_embeddings": {
+                        "type": "nested",
+                        "properties": {
+                            "text": {"type": "text"},
+                            "embedding": {"type": "dense_vector", "dims": 768}
+                        }
                     }
                 }
-            }
         )
 
         if response.get("acknowledged"):
@@ -129,46 +141,121 @@ class ElasticsearchService:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error retrieving workspaces: {str(e)}")     
             
-    async def store_in_elastic(
-            self, workspace_name: str, 
-            filename: str, 
-            transcript: str, 
-            participants: list, 
-            transcript_embeddings: list
-        ) -> str:
-            
-            # Generate a unique file ID
-            file_id = uuid.uuid4().hex
+    async def store_in_elastic(self, workspace_name: str, filename: str, content_type: str, content: str, embeddings: list) -> str:   
+        """
+        Store transcript or PDF text along with embeddings in Elasticsearch.
 
-            # Build the document structure
-            doc = {
-                "file_id": file_id,
-                "transcript": transcript,
-                "participants": participants,
-                "filename": filename,
-                "transcript_embeddings": [
-                    {
-                        "start": segment["start"],
-                        "end": segment["end"],
-                        "text": segment["chunk"],
-                        "embedding": segment["embedding"]
-                    }
-                    for segment in transcript_embeddings
-                ]
-            }
+        Args:
+            workspace_name (str): Workspace index.
+            filename (str): File name.
+            content_type (str): "transcript" or "pdf".
+            content (str): Full transcript or extracted PDF text.
+            embeddings (list): List of embedding dictionaries.
 
-            try:
-                # Index document into Elasticsearch
-                self.es.index(index=workspace_name, id=file_id, body=doc)
-                logger.info(f"Successfully indexed document with file_id {file_id}")
-                return file_id
-            except Exception as e:
-                logger.error(f"Error storing data in Elasticsearch for file {filename}: {str(e)}")
-                raise HTTPException(
-                    status_code=500, 
-                    detail=f"Error storing data in Elasticsearch: {str(e)}"
-                )
-        
+        Returns:
+            str: File ID
+        """  
+        # Generate a unique file ID
+        file_id = uuid.uuid4().hex
+
+        # Build the document payload
+        doc = {
+            "file_id": file_id,
+            "filename": filename,
+            "content_type": content_type,
+        }
+
+        if content_type == "transcript":
+            doc["transcript"] = content
+            doc["transcript_embeddings"] = [
+                {
+                    "start": segment.get("start", 0.0),
+                    "end": segment.get("end", 0.0),
+                    "text": segment["chunk"],
+                    "embedding": segment["embedding"]
+                }
+                for segment in embeddings
+            ]
+        elif content_type == "pdf":
+            doc["pdf_text"] = content
+            doc["pdf_embeddings"] = [
+                {
+                    "text": segment["chunk"],
+                    "embedding": segment["embedding"]
+                }
+                for segment in embeddings
+            ]
+
+        try:
+            # Index document into Elasticsearch
+            self.es.index(index=workspace_name, id=file_id, body=doc)
+            logger.info(f"Successfully indexed document with file_id {file_id}")
+            return file_id
+        except Exception as e:
+            logger.error(f"Error storing data in Elasticsearch for file {filename}: {str(e)}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Error storing data in Elasticsearch: {str(e)}"
+            )
+
+    async def index_hybrid_collection(self, chunks: List[Document], brain_id: str, batch_size: int = 64):
+        """
+        Index the given list of Document chunks into Elasticsearch.
+        """
+        logger.info(f"Indexing {len(chunks)} documents into Elasticsearch Hybrid Collection.")
+
+        try:
+            invalid_chunks = 0
+            batched_chunks = [
+                chunks[i : i + batch_size] for i in range(0, len(chunks), batch_size)
+            ]
+
+            for batch_idx, batch in enumerate(tqdm(batched_chunks, desc="Processing batches")):
+                actions = []
+                for i, doc in enumerate(batch):
+                    try:
+                        dense_embedding = self.create_dense_vector(doc.page_content)
+                    except Exception as e:
+                        logger.exception(f"Error creating dense vector for document {i}: {e}")
+                        dense_embedding = None
+
+                    try:
+                        sparse_embedding = self.create_sparse_vector(doc.page_content)
+                    except Exception as e:
+                        logger.exception(f"Error creating sparse vector for document {i}: {e}")
+                        sparse_embedding = None
+
+                    if dense_embedding is not None and sparse_embedding is not None:
+                        doc_id = str(uuid.uuid4())
+                        # Determine content type (transcript or PDF)
+                        content_type = "transcript" if "transcript" in doc.metadata else "pdf"
+
+                        actions.append({
+                            "_index": self.index_name,
+                            "_id": doc_id,
+                            "_source": {
+                                "brain_id": brain_id,
+                                "doc_id": doc_id,
+                                "content_type": content_type,
+                                "content": doc.page_content,
+                                "metadata": doc.metadata,
+                                "dense_embedding": dense_embedding,
+                                "sparse_embedding": sparse_embedding,
+                            },
+                        })
+                    else:
+                        logger.warning(f"Skipping indexing for document {i} due to failed embeddings.")
+                        invalid_chunks += 1
+                  # Bulk insert into Elasticsearch
+                if actions:
+                    bulk(self.es_client, actions)
+                    logger.info(f"Indexed {len(actions)} documents into Elasticsearch.")
+
+            return invalid_chunks == 0
+        except Exception as e:
+            logger.exception(f"Error occurred during batch indexing: {e}")
+            return False
+  
     def retrieve_from_elastic(self, workspace_name: str, file_id: str) -> dict:
         
         try:

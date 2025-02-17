@@ -3,6 +3,7 @@ import Sidebar from '../../components/ui/Sidebar';
 import MainSection from '../../components/MainSection';
 import './AppPage.css';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ChatContext, ChatProvider } from '../../context/ChatContext.jsx';
 
 export default function AppPage() {
 
@@ -26,9 +27,11 @@ export default function AppPage() {
   }, []);
 
   return (
+    <ChatProvider>
     <main className='chat-page'>
       <Sidebar hidden={hidden} setHidden={setHidden} />
       <MainSection hidden={hidden} setHidden={setHidden} />
     </main>
+    </ChatProvider>
   );
 }

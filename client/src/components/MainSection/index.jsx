@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Select from 'react-select';
 // import { parseSSEStream } from "../../utils/utils";
 import { createProject, getProjects } from '../../Api/handlers/chatHandler';
@@ -10,15 +10,19 @@ import ChatMessages from '../ChatMessages';
 import SidepanelIcon from '../icons/SidepanelIcon';
 // import PlusIcon from '../icons/PlusIcon';
 import "./mainSection.css";
+import { ChatContext } from '../../context/ChatContext.jsx';
+import PlusIcon from '../icons/PlusIcon.jsx';
 
 export default function MainSection({ hidden, setHidden }) {
   // const [chatId, setChatId] = useState(null);
-  const [messages, setMessages] = useState([]);
+  // const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isPopoverVisible, setPopoverVisible] = useState(false);
   const [projectName, setProjectName] = useState('');
 
-  const [projects, setProjects] = useState([]);
+  const { messages, setMessages } = useContext(ChatContext)
+
+  const { projects, setProjects, currentProject, setCurrentProject } = useContext(ChatContext);
 
   const isLoading = messages.length && messages[messages.length - 1].loading;
 
@@ -54,10 +58,21 @@ export default function MainSection({ hidden, setHidden }) {
   useEffect(() => {
     async function fetchProjects() {
       const response = await getProjects();
-
-      setProjects(response.map(project => ({ value: project.workspace_id, label: project.workspace_name })));
-
+      
+      const projectOptions = response.map(project => ({
+        value: project.workspace_id,
+        label: project.workspace_name
+      }));
+  
+      setProjects(projectOptions);
+  
+      if (projectOptions.length > 0) {
+        const timer = setTimeout(() => setCurrentProject(projectOptions[0]), 1000);
+        
+        return () => clearTimeout(timer); // Cleanup function to clear timeout
+      }
     }
+  
     fetchProjects();
   }, []);
 
@@ -74,12 +89,15 @@ export default function MainSection({ hidden, setHidden }) {
   }
 
   function handleOpenPopover() {
-    setPopoverVisible(true); // Show the popover when button is clicked
+    console.log(1);
+    
+    setPopoverVisible(() => true); // Show the popover when button is clicked
   }
 
   const handleClosePopover = () => {
     setPopoverVisible(false); // Close popover when clicking outside or on close action
   };
+
 
   return (
     <section className="main-section">
@@ -92,6 +110,7 @@ export default function MainSection({ hidden, setHidden }) {
           {!!projects.length && <Select
             options={projects}
             defaultValue={projects[0]}
+            onChange={setCurrentProject}
             styles={{
               control: (provided) => ({
                 ...provided,
@@ -111,9 +130,9 @@ export default function MainSection({ hidden, setHidden }) {
           />}
 
           <PopoverRoot>
-            <PopoverTrigger>
-              <Button size="sm" onClick={handleOpenPopover}>
+            <PopoverTrigger onClick={handleOpenPopover}>
                 {/* <PlusIcon /> */}
+              <Button size="sm" onClick={handleOpenPopover}>
                 {"New Project"}
               </Button>
             </PopoverTrigger>
@@ -122,7 +141,7 @@ export default function MainSection({ hidden, setHidden }) {
               isOpen={isPopoverVisible}
               onClose={handleClosePopover}
               align="top-right"
-              offset={50}
+              offset={10}
               className="mainsection-popover"
             >
               <PopoverContent className="mainsection-popover-content">

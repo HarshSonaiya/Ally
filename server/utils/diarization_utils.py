@@ -4,6 +4,8 @@ from typing import List, Dict
 import torch
 import logging
 
+from fastapi import UploadFile
+
 # Configure the logger
 logging.basicConfig(
     level=logging.INFO,
@@ -23,7 +25,7 @@ class Diarization:
             settings.DIARIZATION_MODEL_NAME,
             use_auth_token= settings.HUGGING_FACE_ACCESS_TOKEN
         )
-    async def perform_diarization(self, audio_file_path: str):
+    async def perform_diarization(self, audio_file: str):
         """
         Send audio file to huggingface api for diarization
 
@@ -33,7 +35,7 @@ class Diarization:
         Returns:
             dict: Diarization response from the API.
         """
-        logger.info(f"Performing diarization on file: {audio_file_path}")
+        logger.info(f"Performing diarization on file")
         # run the pipeline on an audio file
         if self.pipeline:
             logger.info("Initialization successfully")
@@ -42,7 +44,7 @@ class Diarization:
 
         # self.pipeline.to(torch.device("cuda"))
 
-        diarization = self.pipeline(audio_file_path)
+        diarization = self.pipeline(audio_file)
 
         logger.info(f"Diarized content: {diarization} ")
         speaker_segments = []

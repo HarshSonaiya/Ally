@@ -1,18 +1,23 @@
 from pydantic import BaseModel, EmailStr
 from typing import List
 
+
 class GoogleAuthRequest(BaseModel):
-    code: str  
+    code: str
+
 
 class WorkspaceRequest(BaseModel):
     workspace_name: str
 
+
 class AudioVideoFileRequest(BaseModel):
-    participants: List[str]
+    # participants: List[str]
     workspace_name: str
+
 
 class FileUploadRequest(BaseModel):
     workspace_name: str
+
 
 class FileRetrievalResponse(BaseModel):
     file_id: str
@@ -20,10 +25,12 @@ class FileRetrievalResponse(BaseModel):
     participants: list
     embeddings: list | None = []
 
+
 class TranscriptData(BaseModel):
     transcript: str
     participants: list
     embeddings: list | None = []
+
 
 class SummarizationResponse(BaseModel):
     transcription: str
@@ -31,6 +38,6 @@ class SummarizationResponse(BaseModel):
     summaries: List[str]
 
 
-class MailBody (BaseModel):
+class MailBody(BaseModel):
     body: str
     to: List[EmailStr]

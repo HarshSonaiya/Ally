@@ -5,7 +5,7 @@ const BASE_URL = "http://localhost:8000";
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   withCredentials: false,
-  timeout: 10000,
+  // timeout: 10000,
 });
 
 axiosInstance.interceptors.request.use(function accessTokenInterceptor(config) {

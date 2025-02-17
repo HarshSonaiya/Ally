@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useContext, useRef, useState } from 'react';
 import useAutosize from '../../hooks/useAutosize';
 import { GlobeIcon, PaperclipIcon, SendIcon } from '../icons';
 import Button from '../ui/Button';
@@ -6,13 +6,15 @@ import "./chatInput.css";
 import PropTypes from 'prop-types';
 import { X, FileText } from 'lucide-react';
 import { Popover, PopoverRoot, PopoverTrigger } from '../ui/Popover';
+import { ChatContext } from '../../context/ChatContext.jsx';
+import { uploadFiles } from '../../Api/handlers/chatHandler.js'
 
 function ChatInput({ newMessage, setNewMessage, messages, isLoading, submitNewMessage }) {
 
     const [isWebSearch, setIsWebSearch] = useState(false);
 
     const textareaRef = useAutosize(newMessage);
-    const fileRef = useRef(null);
+    const {fileRef} = useContext(ChatContext);
 
     function handleKeyDown(e) {
         if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
@@ -106,6 +108,8 @@ function FileUpload({ fileRef }) {
     const [isOpen, setIsOpen] = useState(false);
     const [error, setError] = useState('');
 
+    const { currentProject } = useContext(ChatContext);
+
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     const handleFileChange = useCallback(async (event) => {
@@ -127,14 +131,18 @@ function FileUpload({ fileRef }) {
     }, []);
 
     const onFileSelect = useCallback((files) => {
-        console.log(files);
+        fileRef.current = files;
     }, []);
 
 
-    const handleSubmit = useCallback(() => {
+    const handleSubmit = useCallback(async () => {
         onFileSelect(files);
         setIsOpen(false);
         setFiles([]);
+        const response = await uploadFiles(files, currentProject.value);
+        console.log("response: ", response);
+        alert(response.data)
+        
     }, [files, onFileSelect]);
 
     return (
@@ -189,7 +197,7 @@ function FileUpload({ fileRef }) {
                                         type="file"
                                         className="file-upload__input-hidden"
                                         multiple
-                                        accept=".pdf,image/*"
+                                        accept=".mp4, .wav"
                                         onChange={handleFileChange}
                                     />
                                 </label>

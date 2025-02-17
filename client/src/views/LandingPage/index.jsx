@@ -57,14 +57,13 @@ const response = await ally.analyze({
         <nav>
           <ul>
             <li><a href="#features">Features</a></li>
-            <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#docs">Documentation</a></li>
+            {/* <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#docs">Documentation</a></li> */}
             <li><a href="#developer">Developer Portal</a></li>
           </ul>
           <div className="auth-buttons">
-            {!auth ? <><Button size='sm' variant='outline' onClick={handleGoogleLogin}>Sign In</Button>
-              <Button size='sm' onClick={handleGoogleLogin}>Sign Up</Button> </>
-              : <Button size='sm' onClick={handleLogout}>Logout</Button>}
+            <Button size='sm' onClick={handleGoogleLogin}>Sign In</Button>
+            <Button size='sm' onClick={handleGoogleLogin}>Sign Up</Button>
           </div>
         </nav>
         <Button variant="outline" className="menu-toggle" size="sm" onClick={() => toggleMenu()}>
@@ -137,7 +136,7 @@ const response = await ally.analyze({
       </section>
 
       {/* Trusted By Section */}
-      <section className="trusted-by">
+      {/* <section className="trusted-by">
         <h2>Trusted by Industry Leaders</h2>
         <div className="company-logos">
           <div className="logo">Company 1</div>
@@ -145,7 +144,7 @@ const response = await ally.analyze({
           <div className="logo">Company 3</div>
           <div className="logo">Company 4</div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer Section */}
       <footer>

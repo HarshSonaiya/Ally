@@ -37,7 +37,39 @@ export function getProjects() {
   }
 }
 
+export async function uploadFiles(files, workspaceName) {
+  try {
+    const formData = new FormData();
+    
+    // Append files to FormData
+    files.forEach((file) => formData.append("files", file));
+
+    // Construct query parameters
+    const query = { workspace_name: workspaceName };
+
+    // Make the API request
+    const response = await axiosRequest({
+      method: "POST",
+      endpoint: `/file/upload/${workspaceName}`,
+      body: formData, 
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response || null;
+  } catch (error) {
+    if (error.response) {
+      return error.response.data;
+    } else {
+      console.error("File Upload Error:", error.message);
+    }
+    return error;
+  }
+}
+
 export default {
   createProject,
   getProjects,
+  uploadFiles,
 };

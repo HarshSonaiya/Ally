@@ -14,6 +14,6 @@ router.get("/workspace/list")(workspace_controller.get_workspaces)
 
 # File Routes
 router.get("/file/list")(file_controller.get_files)
-router.post("/file/upload")(file_controller.process_file)  
+router.post("/file/upload/{workspace_id}")(file_controller.process_file)  
 
 router.get("auth/logout/")(auth_controller.logout)  
