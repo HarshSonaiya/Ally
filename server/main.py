@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from google.auth.transport import requests
 from routes.routes import router
@@ -34,7 +34,10 @@ async def validate_access_token(request: Request, call_next):
 
     # Exclude authentication and refresh token routes from validation
     logger.info(request.url.path)
-    if request.url.path in ["/auth/google-auth", "/docs", "/favicon.ico", "/openapi.json", "/google-callback", "/refresh-token"]:
+    if request.method == "OPTIONS":
+        return Response(status_code=200)  # Allow OPTIONS requests
+
+    if request.url.path in ["/auth/google-auth", "/", "/docs", "/favicon.ico", "/openapi.json", "/google-callback", "/refresh-token"]:
         return await call_next(request)
 
     access_token = request.headers.get("Authorization")
