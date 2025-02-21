@@ -35,4 +35,8 @@ class AppSettings:
         self.MONGO_USERNAME = os.getenv("MONGO_USERNAME")
         self.MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
 
+        self.GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+        self.GOOGLE_CSE_ID= os.getenv("GOOGLE_CSE_ID")
+        self.SUMMARY_MODEL_NAME = os.getenv("SUMMARY_MODEL_NAME")
+
 settings = AppSettings()

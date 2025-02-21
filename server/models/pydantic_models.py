@@ -41,3 +41,7 @@ class SummarizationResponse(BaseModel):
 class MailBody(BaseModel):
     body: str
     to: List[EmailStr]
+
+class WebSearchRequest(BaseModel):
+    query: str
+    summary_type: str

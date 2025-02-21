@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from controllers import auth_controller, file_controller, workspace_controller
+from controllers import auth_controller, file_controller, workspace_controller, chat_controller
 
 # Create an APIRouter to register the routes
 router = APIRouter()
@@ -16,4 +16,7 @@ router.get("/workspace/list")(workspace_controller.get_workspaces)
 router.get("/file/list")(file_controller.get_files)
 router.post("/file/upload/{workspace_id}")(file_controller.process_file)  
 
+# Chat Routes
+router.post("/chat/web-search")(chat_controller.web_search)
+# Log Out route
 router.get("/auth/logout/")(auth_controller.logout)  
