@@ -19,4 +19,4 @@ def transcribe_audio(file: str) -> str:
     logger.info("Model Loaded successfully")
     result = model.transcribe(audio)
     logger.info(f"Trasncription completed \n Time taken for execution: {datetime.datetime.now() - start_time}")
-    return result['text'],result["segments"]
+    return result["segments"]

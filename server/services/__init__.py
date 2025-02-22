@@ -1,5 +1,5 @@
-from .auth_service import authservice
-from .elasticsearch_service import elastic_service
-from .fileprocessingservice import file_processing_service
-from .web_search import search_service
+from .auth_service import AuthService
+from .elasticsearch_service import ElasticsearchService
+from .fileprocessingservice import FileProcessingService
+from .web_search import WebSearch
 # from .pdf_service import pdf_service

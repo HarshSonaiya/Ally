@@ -1,14 +1,17 @@
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from google.auth.transport import requests
-from routes.routes import router
-from services import auth_service
+import requests
+from routes.routes import auth_router, workspace_router, query_router
 import logging
+from config import settings
 
 app = FastAPI()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("main")
 
 # CORS Configuration
@@ -31,34 +34,42 @@ async def add_headers(request, call_next):
 
 @app.middleware("http")
 async def validate_access_token(request: Request, call_next):
+    # Exclude specific routes from validation
+    excluded_paths = [
+        "/auth/google-auth",
+        "/",
+        "/docs",
+        "/favicon.ico",
+        "/openapi.json",
+        "/auth/google-callback",
+        "/refresh-token",
+    ]
 
-    # Exclude authentication and refresh token routes from validation
-    logger.info(request.url.path)
-    if request.method == "OPTIONS":
-        return Response(status_code=200)  # Allow OPTIONS requests
-
-    if request.url.path in ["/auth/google-auth", "/", "/docs", "/favicon.ico", "/openapi.json", "/google-callback", "/refresh-token"]:
+    if request.url.path in excluded_paths or request.method == "OPTIONS":
         return await call_next(request)
 
-    access_token = request.headers.get("Authorization")
-    if access_token and access_token.startswith("Bearer "):
-        access_token = access_token.split(" ")[1]
+    authorization: str = request.headers.get("Authorization")
+    if authorization and authorization.startswith("Bearer "):
+        access_token = authorization.split(" ")[1]
         try:
-            user = requests.verify_token(access_token)
-            request.state.user = user
-        except Exception:
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired access token"
-            )
+            response = requests.post(settings.TOKEN_INFO_URL, params={"access_token": access_token})
+            if response.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid or expired access token")
+
+            token_info = response.json()
+            request.state.user_id = token_info.get("user_id")
+            request.state.access_token = access_token
+        except HTTPException as e:
+            return Response(content=e.detail, status_code=e.status_code)
     else:
-        raise HTTPException(status_code=401, detail="Access token missing")
+        return Response(content="Access token missing", status_code=401)
 
     return await call_next(request)
 
-
-# Include the PDF processing routes from the controller
-app.include_router(router)
-
+# Register the routers
+app.include_router(auth_router)
+app.include_router(workspace_router)
+app.include_router(query_router)
 
 @app.get("/")
 def read_root():

@@ -1,21 +1,28 @@
 import logging
+import httpx
 from datetime import datetime, timezone
 from fastapi import HTTPException, Request, Response, Depends
 from fastapi.responses import RedirectResponse, JSONResponse
 from pymongo.errors import DuplicateKeyError
 from models.user_model import UserModel
-from services.auth_service import authservice
+from services import AuthService
 from utils.helper import send_response, handle_exception
 from config import get_es_client, settings, db_instance
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 class AuthController:
     def __init__(self):
+        self.auth_service = AuthService()
         self.es_client = get_es_client()
-        self.user_collection = db_instance.get_collection(settings.MONGO_INITDB_DATABASE, "users")
+        self.user_collection = db_instance.get_collection(
+            settings.MONGO_INITDB_DATABASE, "users"
+        )
 
     async def google_auth(self):
         """
@@ -31,31 +38,40 @@ class AuthController:
             f"&include_granted_scopes=true"
             f"&prompt=consent"
         )
+        logger.info("Request to signup or lgoin received.")
         return RedirectResponse(google_oauth_url)
 
     async def google_callback(self, request: Request, response: Response):
         try:
             auth_code = request.query_params.get("code")
             if not auth_code:
-                raise HTTPException(status_code=400, detail="Authorization code is required.")
+                raise HTTPException(
+                    status_code=400, detail="Authorization code is required."
+                )
 
-            logger.info(f"Login request with code: {auth_code}")
+            logger.info(f"Authorization code received from Google.")
 
             # Exchange auth code for tokens
-            token_response = await authservice.get_access_token(auth_code)
+            token_response = await self.auth_service.get_access_token(auth_code)
             access_token = token_response.get("access_token")
             refresh_token = token_response.get("refresh_token")
 
-            if not access_token:
+            if not access_token or not refresh_token:
                 raise HTTPException(status_code=401, detail="Token Exchange failed.")
 
+            logger.info(f"Access and Refresh token received from Google.")
+
             # Extract user info from ID token (frontend will decode this too)
-            user_info = await authservice.get_user_info(access_token)
+            user_info = await self.auth_service.get_user_info(access_token)
             email = user_info.get("email")
             google_id = user_info.get("sub")
 
             if not email or not google_id:
-                raise HTTPException(status_code=400, detail="Incomplete user info from Google")
+                raise HTTPException(
+                    status_code=400, detail="Incomplete user info from Google"
+                )
+
+            logger.info(f"User information received from Google.")
 
             # Store user records in MongoDB
             user_data = {
@@ -66,18 +82,26 @@ class AuthController:
                 "access_token": access_token,
                 "refresh_token": refresh_token,
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": datetime.now(timezone.utc).isoformat(),
             }
 
-            await self.store_user(user_data)
-            response = RedirectResponse(url=f"http://localhost:5173/chat?access_token={access_token}", status_code=303)
+            logger.info(f"Stroing user data.")
+            if await self.store_user(user_data):
+                logger.info(f"User data stored succcessfully.")
+            else:
+                logger.info(f"User data stored succcessfully.")
+
+            response = RedirectResponse(
+                url=f"http://localhost:5173/chat?access_token={access_token}",
+                status_code=303,
+            )
             response.set_cookie(
                 key="refresh_token",
                 value=refresh_token,
                 httponly=True,
                 secure=False,
                 samesite="Lax",
-                max_age=60 * 60 * 24 * 30,  # 30 days
+                max_age=60 * 60 * 24 * 30,
             )
             return response
         except Exception as e:
@@ -91,7 +115,7 @@ class AuthController:
     #     refresh_token = request.cookies.get("refresh_token")
     #     if not refresh_token:
     #         raise HTTPException(status_code=401, detail="No refresh token found")
-        
+
     #     try:
     #         new_access_token = await authservice.refresh_access_token(refresh_token)
     #         if new_access_token:
@@ -101,31 +125,36 @@ class AuthController:
     #     except Exception as e:
     #         raise HTTPException(status_code=500, detail=f"Error refreshing token: {str(e)}")
 
-    async def logout(self):
+    async def logout(self, request: Request):
         """
         Logout user by invalidating refresh token and clearing cookies.
         """
         try:
-            response = JSONResponse(content={"message": "Logged out successfully"})
+            # Invalidate the access token
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://oauth2.googleapis.com/revoke",
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    data={"token": request.state.access_token},
+                )
+                if response.status_code != 200:
+                    raise HTTPException(
+                        status_code=400, detail="Error revoking access token."
+                    )
             response.delete_cookie(key="refresh_token")
-            return response
+            return JSONResponse(content={"message": "Logout successful."}, status_code=200)
         except Exception as e:
             logger.error(f"Error during logout: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")
 
     async def store_user(self, user_data: dict):
         try:
-            logger.info(f"User data: {user_data}")
             user = UserModel(**user_data)
-            logger.info(f"User data: {user_data}")
             self.user_collection.update_one(
-                {"email": user_data["email"]},
-                {"$set": user_data},
-                upsert=True
+                {"email": user.email}, {"$set": user.model_dump()}, upsert=True
             )
+            return True
         except DuplicateKeyError:
             raise HTTPException(status_code=500, detail="User already exists.")
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error storing user: {str(e)}")
-
-auth_controller = AuthController()

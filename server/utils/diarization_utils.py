@@ -73,41 +73,33 @@ class Diarization:
         # Resultant unified transcript
         unified_transcript = []
         logger.info("Mapping begins.")
-    
-        logger.info(f"Diarization object type: {type(diarization)}")
-        logger.info(f"Diarization object content: {diarization}")
-        logger.info(f"Transcription object type: {type(transcription)}")
-        logger.info(f"Transcription object content: {transcription}")
 
         # Process transcription segments
-        for trans in transcription:
-            logger.info(f"Transcription accessed: {trans} of the type: {type(trans)}")
-            trans_start = trans.get('start')
-            logger.info("Accessed.")
-            trans_end = trans['end']
-            trans_text = trans['text']
-            
-            logger.info("Overlaping begins.")
+        for segment in transcription:
+            segment_start = segment['start']
+            segment_end = segment['end']
+            segment_text = segment['text']
+
             # Collect all diarization segments overlapping with this transcription
             overlapping_segments = [
                 dia for dia in diarization
-                if max(dia['start'], trans_start) - min(dia['end'], trans_end) < tolerance
+                if max(dia['start'], segment_start) - min(dia['end'], segment_end) < tolerance
             ]
-            logger.info("Overlaping over.")
+
             # Handle edge cases: no overlap or multiple overlaps
             if not overlapping_segments:
                 # No matching diarization, assign as "UNKNOWN"
                 unified_transcript.append({
-                    "start": trans_start,
-                    "end": trans_end,
+                    "start": segment_start,
+                    "end": segment_end,
                     "speaker": "UNKNOWN",
-                    "text": trans_text
+                    "text": segment_text
                 })
             else:
                 # Map text to overlapping diarization segments
                 for dia in overlapping_segments:
-                    overlap_start = max(dia['start'], trans_start)
-                    overlap_end = min(dia['end'], trans_end)
+                    overlap_start = max(dia['start'], segment_start)
+                    overlap_end = min(dia['end'], segment_end)
                     
                     if overlap_start < overlap_end:
                         # Split transcription text proportionally if needed
@@ -115,7 +107,7 @@ class Diarization:
                             "start": overlap_start,
                             "end": overlap_end,
                             "speaker": dia['speaker'],
-                            "text": trans_text  # Adjust splitting logic for detailed mapping
+                            "text": segment_text  # Adjust splitting logic for detailed mapping
                         })
         
         # Merge adjacent segments with the same speaker

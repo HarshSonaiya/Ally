@@ -17,7 +17,9 @@ class AppSettings:
         self.TOKEN_URI = os.getenv("TOKEN_URI")  
         self.REDIRECT_URI = os.getenv("REDIRECT_URI")
         self.USER_INFO_URI = os.getenv("USER_INFO_URI")
-
+        self.REVOKE_TOKEN_URL = os.getenv("REVOKE_TOKEN_URL")
+        self.TOKEN_INFO_URL = os.getenv("TOKEN_INFO_URL")
+        
         self.HOST = os.getenv("MAIL_HOST")
         self.PORT = os.getenv("MAIL_PORT")
         self.USERNAME = os.getenv("MAIL_USERNAME")

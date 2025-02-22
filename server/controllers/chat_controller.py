@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from services import search_service
+from services import WebSearch
 from utils.helper import send_response
 import logging
 from models.pydantic_models import WebSearchRequest
@@ -15,6 +15,8 @@ class ChatController:
     3. Audio Files Realted Chat
     4. PDF Files Realted Chat
     """
+    def __init__(self):
+        self.search_service = WebSearch()
 
     async def web_search(self, request: WebSearchRequest):
         """
@@ -24,9 +26,7 @@ class ChatController:
         
         try:
             logger.info(f"Web Search request for the query: {request.query}")
-            response = await search_service.process_query(request.query, request.summary_type)
+            response = await self.search_service.process_query(request.query, request.summary_type)
             return send_response(200, f"Web Search successfully", data=response)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error creating workspace: {e}")
-        
-chat_controller = ChatController()

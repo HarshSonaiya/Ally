@@ -82,4 +82,3 @@ class AuthService:
             logger.error(f"Error while fetching user information: {str(e)}")
             raise e
         
-authservice = AuthService()

@@ -1,22 +1,26 @@
 from fastapi import APIRouter
-from controllers import auth_controller, file_controller, workspace_controller, chat_controller
-
-# Create an APIRouter to register the routes
-router = APIRouter()
+from controllers import AuthController, FileController, ChatController, WorkspaceController
 
 # Authentication Route
-router.get("/auth/google-auth")(auth_controller.google_auth)  
-router.get("/google-callback")(auth_controller.google_callback)
+auth_router = APIRouter(prefix="/auth")
+auth_controller = AuthController()
+auth_router.get("/google-auth")(auth_controller.google_auth)  
+auth_router.get("/google-callback")(auth_controller.google_callback)
+auth_router.get("/logout/")(auth_controller.logout)  
 
 # Workspace Routes
-router.post("/workspace/create")(workspace_controller.create_workspace)
-router.get("/workspace/list")(workspace_controller.get_workspaces)
+workspace_router = APIRouter(prefix="/workspace")
+workspace_controller = WorkspaceController()
+workspace_router.post("/create")(workspace_controller.create_workspace)
+workspace_router.get("/list")(workspace_controller.get_workspaces)
+
+query_router = APIRouter()
 
 # File Routes
-router.get("/file/list")(file_controller.get_files)
-router.post("/file/upload/{workspace_id}")(file_controller.process_file)  
+file_controller = FileController()
+query_router.get("/file/list")(file_controller.get_files)
+query_router.post("/file/upload")(file_controller.process_file)  
 
 # Chat Routes
-router.post("/chat/web-search")(chat_controller.web_search)
-# Log Out route
-router.get("/auth/logout/")(auth_controller.logout)  
+chat_controller = ChatController()
+query_router.post("/chat/web-search")(chat_controller.web_search)

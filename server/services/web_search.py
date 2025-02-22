@@ -124,5 +124,3 @@ class WebSearch:
                 'source': 'Error',
                 'result': f"Error processing query: {str(e)}"
         }
-
-search_service = WebSearch()

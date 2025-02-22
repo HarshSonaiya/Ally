@@ -3,6 +3,7 @@ import logging
 from typing import List
 from sentence_transformers import SentenceTransformer
 from config import settings
+from utils.const import AUDIO_SUMMARY_PROMPT
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -122,7 +123,7 @@ class TranscriptSummarizer:
 
         # Generate the summary by passing the full transcript to the LLM
         logger.info("Generating summary using LLM...")
-        summary = self.generate_summary(full_transcript)
+        summary = generate_summary(full_transcript)
 
         return {
             "summary": summary,
@@ -130,26 +131,18 @@ class TranscriptSummarizer:
             "embeddings": all_segment_embeddings
         }
     
-    def generate_summary(self, context: str):
-    
-        """
-        Generate final summary from the provided context.
+def generate_summary(context: str):
 
-        Args: 
-            context (str): Contais orignal transcript as well as clustered summaries.
-        
-        Returns:
-            str: Summary of the file.
-        """
-        prompt = (f"""
-            Summarize the following context concisely and focus on the topic, ignoring speaker labels
-            which consists of the orignal transcript with the heading "Transcript:" 
-            and the Mapped segments after the heading "Mapped Segments:"\n\n {context}.
-            Ensure the summary is clear and retains the main points of the text.
-          """)
-        # Invoke the LLM with the prompt
-        summary = self.llm.invoke(prompt)
-        return summary.content
+    """
+    Generate final summary from the provided context.
 
-summarizer=TranscriptSummarizer()
+    Args: 
+        context (str): Contais orignal transcript as well as clustered summaries.
     
+    Returns:
+        str: Summary of the file.
+    """
+    prompt = AUDIO_SUMMARY_PROMPT.format(context=context)
+    # Invoke the LLM with the prompt
+    summary = TranscriptSummarizer().llm.invoke(prompt)
+    return summary.content
