@@ -125,19 +125,19 @@ class AuthController:
     #     except Exception as e:
     #         raise HTTPException(status_code=500, detail=f"Error refreshing token: {str(e)}")
 
-    async def logout(self, request: Request):
+    async def logout(self, request: Request, response: Response):
         """
         Logout user by invalidating refresh token and clearing cookies.
         """
         try:
             # Invalidate the access token
             async with httpx.AsyncClient() as client:
-                response = await client.post(
+                google_response = await client.post(
                     "https://oauth2.googleapis.com/revoke",
                     headers={"Content-Type": "application/x-www-form-urlencoded"},
                     data={"token": request.state.access_token},
                 )
-                if response.status_code != 200:
+                if google_response.status_code != 200:
                     raise HTTPException(
                         status_code=400, detail="Error revoking access token."
                     )

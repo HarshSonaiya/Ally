@@ -4,8 +4,10 @@ import torch
 from ffmpeg import FFmpeg
 from fastapi import UploadFile
 from utils.diarization_utils import Diarization
-from utils.summarization_utils import TranscriptSummarizer
+from utils.summarization_utils import SummarizationService
+from services.transcript_processor import TranscriptProcessor
 from utils.whisper_utils import transcribe_audio
+from utils.const import AUDIO_SUMMARY_PROMPT
 
 
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +16,8 @@ logger = logging.getLogger(__name__)
 class FileProcessingService:
     def __init__(self):
         self.diarization = Diarization() 
-        self.summarizer = TranscriptSummarizer()
+        self.summarization_service = SummarizationService()
+        self.transcript_processor = TranscriptProcessor()
     
     async def process_audio_video_files(self, file: UploadFile):
 
@@ -31,7 +34,7 @@ class FileProcessingService:
             logger.info(f"Segments mapped successfully.")
 
             # Generate LaBSE embeddings for the entire transcript
-            summary_results = self.summarizer.process_and_summarize_transcript(formatted_transcript)
+            summary_results = self.summarization_service.generate_summary(self.transcript_processor, formatted_transcript, AUDIO_SUMMARY_PROMPT)
             logger.info(f"Summary and Transcript Embeddings generated successfully")
 
             logger.info("Summary is %s ", summary_results.get("summary",""))

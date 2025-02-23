@@ -15,6 +15,16 @@
 
 # logger = logging.getLogger(__name__)
 
+# class PDFProcessor(Processor):
+#     """
+#     Processor for handling PDF content.
+#     """
+#     def process_content(self, pdf_text: str) -> dict:
+#         text_chunks = self.chunk_text(pdf_text)
+#         embeddings = self.generate_embeddings(text_chunks)
+#         return {"processed_text": pdf_text, "embeddings": embeddings}
+
+
 # class PdfService:
 #     def __init__(self):
 #         pass

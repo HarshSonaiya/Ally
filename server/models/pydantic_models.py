@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr
-from typing import List
+from pydantic import BaseModel, EmailStr, Field
+from typing import List, Optional
 
 
 class GoogleAuthRequest(BaseModel):
@@ -45,3 +45,11 @@ class MailBody(BaseModel):
 class WebSearchRequest(BaseModel):
     query: str
     summary_type: str
+
+class ClassifyQuery(BaseModel):
+    query: str = Field(..., description="Extract the actual user query to respond to.")
+    category: str = Field(..., description="The classified category of the user query. Possible values: 'General Query', 'Audio Files Related Query', 'PDF File Related Query', 'News Explain Query', 'Unknown Query'.")
+    keywords: List[str] = Field(..., description="A list of extracted essential keywords from the user query.")
+    start_timestamp: Optional[str] = Field(None, description="The extracted start timestamp if any, otherwise None.")
+    end_timestamp: Optional[str] = Field(None, description="The extracted end timestamp if any, otherwise None.")
+    

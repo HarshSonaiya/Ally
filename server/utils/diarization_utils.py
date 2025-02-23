@@ -45,8 +45,7 @@ class Diarization:
         # self.pipeline.to(torch.device("cuda"))
 
         diarization = self.pipeline(audio_file)
-
-        logger.info(f"Diarized content: {diarization} ")
+        
         speaker_segments = []
         for segment, _, label in diarization.itertracks(yield_label=True):
             speaker_segments.append({
