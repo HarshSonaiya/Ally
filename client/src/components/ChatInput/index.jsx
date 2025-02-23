@@ -14,7 +14,7 @@ function ChatInput({ newMessage, setNewMessage, messages, isLoading, submitNewMe
     const [isWebSearch, setIsWebSearch] = useState(false);
 
     const textareaRef = useAutosize(newMessage);
-    const {fileRef} = useContext(ChatContext);
+    const { fileRef } = useContext(ChatContext);
 
     function handleKeyDown(e) {
         if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
@@ -134,6 +134,8 @@ function FileUpload({ fileRef }) {
         fileRef.current = files;
     }, []);
 
+    console.log("Files: ", files);
+
 
     const handleSubmit = useCallback(async () => {
         onFileSelect(files);
@@ -142,7 +144,7 @@ function FileUpload({ fileRef }) {
         const response = await uploadFiles(files, currentProject.value);
         console.log("response: ", response);
         alert(response.data)
-        
+
     }, [files, onFileSelect]);
 
     return (

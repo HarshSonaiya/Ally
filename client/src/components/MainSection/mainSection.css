@@ -76,7 +76,7 @@
   border-radius: 0.5rem;
 }
 
-.mainsection-popover {
+.mainSection-popover {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -85,7 +85,7 @@
   border: 1px solid var(--input);
 }
 
-.mainsection-popover-content {
+.mainSection-popover-content {
   display: flex;
   flex-direction: column;
   /* justify-content: ; */
@@ -94,7 +94,7 @@
   height: 100%;
 }
 
-.mainsection-popover-footer {
+.mainSection-popover-footer {
   display: flex;
   justify-content: end;
   padding-bottom: 0.325rem;

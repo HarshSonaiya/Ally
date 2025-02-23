@@ -1,15 +1,16 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8000";
+// const BASE_URL = "http://localhost:8000";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  withCredentials: false,
+  withCredentials: true,
   // timeout: 10000,
 });
 
 axiosInstance.interceptors.request.use(function accessTokenInterceptor(config) {
-  const accessToken = localStorage.getItem("accessToken");
+  const accessToken = localStorage.getItem("access_token");
 
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;

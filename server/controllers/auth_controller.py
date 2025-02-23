@@ -100,7 +100,7 @@ class AuthController:
                 value=refresh_token,
                 httponly=True,
                 secure=False,
-                samesite="Lax",
+                # samesite="None",
                 max_age=60 * 60 * 24 * 30,
             )
             return response
@@ -141,8 +141,9 @@ class AuthController:
                     raise HTTPException(
                         status_code=400, detail="Error revoking access token."
                     )
-            response.delete_cookie(key="refresh_token")
-            return JSONResponse(content={"message": "Logout successful."}, status_code=200)
+            response.delete_cookie(key="refresh_token", path="/", domain="localhost")
+            # return JSONResponse(content={"message": "Logout successful."}, status_code=200)
+            return send_response(200, "Logout successful.")
         except Exception as e:
             logger.error(f"Error during logout: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")

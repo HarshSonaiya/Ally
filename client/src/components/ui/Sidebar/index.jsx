@@ -4,17 +4,22 @@ import { assets } from '../../../assets/assets';
 import Button from '../Button';
 import { HelpIcon, MinusIcon, MoreIcon, PlusIcon, SettingsIcon } from "../../icons"
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../../../Api/handlers/authHandler';
 
 export default function Sidebar({ hidden, setHidden }) {
 
     const navigate = useNavigate();
 
-    function handleLogout() {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('email');
-        localStorage.removeItem('profile_picture');
-        localStorage.removeItem('username');
-        navigate('/');
+    async function handleLogout() {
+        const response = await logout();
+
+        console.log(response);
+
+        if (response.status_code === 200) {
+            localStorage.removeItem('access_token');
+            navigate('/');
+        }
+
     }
 
     // const [hidden, setHidden] = useState(false);

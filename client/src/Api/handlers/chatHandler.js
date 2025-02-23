@@ -40,9 +40,13 @@ export function getProjects() {
 export async function uploadFiles(files, workspaceName) {
   try {
     const formData = new FormData();
-    
+
+    console.log("Files: ", files);
+
     // Append files to FormData
-    files.forEach((file) => formData.append("files", file));
+    formData.append("files", files);
+
+    console.log("FormData: ", formData);
 
     // Construct query parameters
     const query = { workspace_name: workspaceName };
@@ -51,7 +55,8 @@ export async function uploadFiles(files, workspaceName) {
     const response = await axiosRequest({
       method: "POST",
       endpoint: `/file/upload/${workspaceName}`,
-      body: formData, 
+      body: formData,
+      query,
       headers: {
         "Content-Type": "multipart/form-data",
       },

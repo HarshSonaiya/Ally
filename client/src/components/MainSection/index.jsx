@@ -1,28 +1,37 @@
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 import { useContext, useEffect, useState } from "react";
-import Select from 'react-select';
+import Select from "react-select";
 // import { parseSSEStream } from "../../utils/utils";
-import { createProject, getProjects } from '../../Api/handlers/chatHandler';
+import { createProject, getProjects } from "../../Api/handlers/chatHandler";
 import Button from "../ui/Button";
-import { PopoverRoot, PopoverTrigger, PopoverContent, Popover, PopoverFooter, PopoverAction, PopoverTitle } from '../../components/ui/Popover'; // Import components from your popover file
-import ChatInput from '../ChatInput';
-import ChatMessages from '../ChatMessages';
-import SidepanelIcon from '../icons/SidepanelIcon';
+import {
+  PopoverRoot,
+  PopoverTrigger,
+  PopoverContent,
+  Popover,
+  PopoverFooter,
+  PopoverAction,
+  PopoverTitle,
+} from "../../components/ui/Popover"; // Import components from your popover file
+import ChatInput from "../ChatInput";
+import ChatMessages from "../ChatMessages";
+import SidepanelIcon from "../icons/SidepanelIcon";
 // import PlusIcon from '../icons/PlusIcon';
 import "./mainSection.css";
-import { ChatContext } from '../../context/ChatContext.jsx';
-import PlusIcon from '../icons/PlusIcon.jsx';
+import { ChatContext } from "../../context/ChatContext.jsx";
+import PlusIcon from "../icons/PlusIcon.jsx";
 
 export default function MainSection({ hidden, setHidden }) {
   // const [chatId, setChatId] = useState(null);
   // const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isPopoverVisible, setPopoverVisible] = useState(false);
-  const [projectName, setProjectName] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [projectName, setProjectName] = useState("");
 
-  const { messages, setMessages } = useContext(ChatContext)
+  const { messages, setMessages } = useContext(ChatContext);
 
-  const { projects, setProjects, currentProject, setCurrentProject } = useContext(ChatContext);
+  const { projects, setProjects, currentProject, setCurrentProject } =
+    useContext(ChatContext);
 
   const isLoading = messages.length && messages[messages.length - 1].loading;
 
@@ -30,22 +39,24 @@ export default function MainSection({ hidden, setHidden }) {
     const trimmedMessage = newMessage.trim();
     if (!trimmedMessage || isLoading) return;
 
-    setMessages(prev => [...prev,
-    { role: 'user', content: trimmedMessage },
-    { role: 'assistant', content: '', sources: [], loading: true }
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: trimmedMessage },
+      { role: "assistant", content: "", sources: [], loading: true },
     ]);
-    setNewMessage('');
+    setNewMessage("");
 
     setTimeout(() => {
       console.log(messages);
 
-      setMessages(draft => {
+      setMessages((draft) => {
         const updatedMessages = [...draft];
-        updatedMessages[updatedMessages.length - 1].content = "Hello, how can I help you today?";
+        updatedMessages[updatedMessages.length - 1].content =
+          "Hello, how can I help you today?";
         return updatedMessages;
       });
 
-      setMessages(draft => {
+      setMessages((draft) => {
         const updatedMessages = [...draft];
         updatedMessages[updatedMessages.length - 1].loading = false;
         return updatedMessages;
@@ -58,21 +69,24 @@ export default function MainSection({ hidden, setHidden }) {
   useEffect(() => {
     async function fetchProjects() {
       const response = await getProjects();
-      
-      const projectOptions = response.map(project => ({
-        value: project.workspace_id,
-        label: project.workspace_name
+
+      const projectOptions = response.map((project) => ({
+        value: project,
+        label: project,
       }));
-  
+
       setProjects(projectOptions);
-  
+
       if (projectOptions.length > 0) {
-        const timer = setTimeout(() => setCurrentProject(projectOptions[0]), 1000);
-        
+        const timer = setTimeout(
+          () => setCurrentProject(projectOptions[0]),
+          1000
+        );
+
         return () => clearTimeout(timer); // Cleanup function to clear timeout
       }
     }
-  
+
     fetchProjects();
   }, []);
 
@@ -88,63 +102,58 @@ export default function MainSection({ hidden, setHidden }) {
     // console.log("Creating project...");
   }
 
-  function handleOpenPopover() {
-    console.log(1);
-    
-    setPopoverVisible(() => true); // Show the popover when button is clicked
-  }
-
-  const handleClosePopover = () => {
-    setPopoverVisible(false); // Close popover when clicking outside or on close action
-  };
-
-
   return (
     <section className="main-section">
       <div className="composer-parent">
         <div className="composer-header">
-          {!!hidden && <Button variant="ghost" size='icon' onClick={() => setHidden(() => false)}>
-            <SidepanelIcon className="sidepanel-icon" />
-          </Button>}
+          {!!hidden && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setHidden(() => false)}
+            >
+              <SidepanelIcon className="sidepanel-icon" />
+            </Button>
+          )}
 
-          {!!projects.length && <Select
-            options={projects}
-            defaultValue={projects[0]}
-            onChange={setCurrentProject}
-            styles={{
-              control: (provided) => ({
-                ...provided,
-                width: 200,
-                height: 30,
-                borderRadius: 5,
-                border: '1px solid #E5E7EB',
-                fontSize: 16,
-                color: '#4B5563',
-                backgroundColor: '#F3F4F6',
-                boxShadow: 'none',
-                '&:hover': {
-                  border: '1px solid #E5E7EB',
-                },
-              }),
-            }}
-          />}
+          {
+            <Select
+              options={projects}
+              defaultValue={projects[0]}
+              onChange={setCurrentProject}
+              placeholder="Select Project"
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  width: 200,
+                  height: 30,
+                  borderRadius: 5,
+                  border: "1px solid #E5E7EB",
+                  fontSize: 16,
+                  color: "#4B5563",
+                  backgroundColor: "#F3F4F6",
+                  boxShadow: "none",
+                  "&:hover": {
+                    border: "1px solid #E5E7EB",
+                  },
+                }),
+              }}
+            />
+          }
 
           <PopoverRoot>
-            <PopoverTrigger onClick={handleOpenPopover}>
-                {/* <PlusIcon /> */}
-              <Button size="sm" onClick={handleOpenPopover}>
-                {"New Project"}
-              </Button>
+            <PopoverTrigger onClick={() => setIsOpen(!isOpen)}>
+              <Button size="sm">{"New Project"}</Button>
             </PopoverTrigger>
 
             <Popover
-              isOpen={isPopoverVisible}
-              onClose={handleClosePopover}
+              visible={isOpen}
+              onClose={() => setIsOpen(false)}
               align="top-right"
-              offset={10}
-              className="mainsection-popover"
+              offset={50}
+              className="mainSection-popover"
             >
-              <PopoverContent className="mainsection-popover-content">
+              <PopoverContent className="mainSection-popover-content">
                 <PopoverTitle>Create a New Project</PopoverTitle>
                 <input
                   type="text"
@@ -155,9 +164,9 @@ export default function MainSection({ hidden, setHidden }) {
                 />
               </PopoverContent>
 
-              <PopoverFooter className="mainsection-popover-footer">
+              <PopoverFooter className="mainSection-popover-footer">
                 <PopoverAction onClick={handleCreateProject}>
-                  <Button size='sm'>Create Project</Button>
+                  <Button size="sm">Create Project</Button>
                 </PopoverAction>
               </PopoverFooter>
             </Popover>
@@ -165,7 +174,13 @@ export default function MainSection({ hidden, setHidden }) {
         </div>
         <ChatMessages messages={messages} isLoading={isLoading} />
       </div>
-      <ChatInput newMessage={newMessage} setNewMessage={setNewMessage} messages={messages} isLoading={isLoading} submitNewMessage={submitNewMessage} />
+      <ChatInput
+        newMessage={newMessage}
+        setNewMessage={setNewMessage}
+        messages={messages}
+        isLoading={isLoading}
+        submitNewMessage={submitNewMessage}
+      />
     </section>
   );
 }
