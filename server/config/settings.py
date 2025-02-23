@@ -41,4 +41,6 @@ class AppSettings:
         self.GOOGLE_CSE_ID= os.getenv("GOOGLE_CSE_ID")
         self.SUMMARY_MODEL_NAME = os.getenv("SUMMARY_MODEL_NAME")
 
+        self.NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
+        
 settings = AppSettings()

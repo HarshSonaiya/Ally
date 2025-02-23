@@ -55,10 +55,8 @@ async def validate_access_token(request: Request, call_next):
         logger.info(f"Access token received: {access_token}")
         try:
             response = requests.post(settings.TOKEN_INFO_URL, params={"access_token": access_token})
-            logger.info(f"Token info response: {response.json()}")
             if response.status_code != 200:
                 raise HTTPException(status_code=401, detail="Invalid or expired access token")
-            logger.info(f"Token info received: {response.json()}")
             token_info = response.json()
             request.state.user_id = token_info.get("user_id")
             request.state.access_token = access_token
