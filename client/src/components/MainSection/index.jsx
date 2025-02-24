@@ -1,8 +1,9 @@
 import PropTypes from "prop-types";
 import { useContext, useEffect, useState } from "react";
 import Select from "react-select";
+import { toast } from "react-toastify";
 // import { parseSSEStream } from "../../utils/utils";
-import { createProject, getProjects } from "../../Api/handlers/chatHandler";
+import { chatQuery, createProject, getProjects, webSearchQuery } from "../../Api/handlers/chatHandler";
 import Button from "../ui/Button";
 import {
   PopoverRoot,
@@ -35,7 +36,37 @@ export default function MainSection({ hidden, setHidden }) {
 
   const isLoading = messages.length && messages[messages.length - 1].loading;
 
-  async function submitNewMessage() {
+  async function submitNewMessage(isWebSearch) {
+
+    if (isWebSearch) {
+      const trimmedMessage = newMessage.trim();
+      if (!trimmedMessage || isLoading) return;
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: trimmedMessage },
+        { role: "assistant", content: "", sources: [], loading: true },
+      ]);
+      setNewMessage("");
+
+      const response = await webSearchQuery(newMessage);
+
+      if (response.status_code == 200) {
+        setMessages((draft) => {
+          const updatedMessages = [...draft];
+          updatedMessages[updatedMessages.length - 1].content = response.data.result;
+          return updatedMessages;
+        });
+
+        setMessages((draft) => {
+          const updatedMessages = [...draft];
+          updatedMessages[updatedMessages.length - 1].loading = false;
+          return updatedMessages;
+        })
+      }
+      return;
+    }
+
     const trimmedMessage = newMessage.trim();
     if (!trimmedMessage || isLoading) return;
 
@@ -46,13 +77,12 @@ export default function MainSection({ hidden, setHidden }) {
     ]);
     setNewMessage("");
 
-    setTimeout(() => {
-      console.log(messages);
+    const response = await chatQuery(newMessage);
 
+    if (response.status_code == 200) {
       setMessages((draft) => {
         const updatedMessages = [...draft];
-        updatedMessages[updatedMessages.length - 1].content =
-          "Hello, how can I help you today?";
+        updatedMessages[updatedMessages.length - 1].content = response.data.result;
         return updatedMessages;
       });
 
@@ -60,8 +90,8 @@ export default function MainSection({ hidden, setHidden }) {
         const updatedMessages = [...draft];
         updatedMessages[updatedMessages.length - 1].loading = false;
         return updatedMessages;
-      });
-    }, 2000);
+      })
+    }
   }
 
   // TODO: replace with actual API call
@@ -85,6 +115,8 @@ export default function MainSection({ hidden, setHidden }) {
 
         return () => clearTimeout(timer); // Cleanup function to clear timeout
       }
+
+      toast.info("No projects found. Create a new project to get started!");
     }
 
     fetchProjects();
@@ -96,7 +128,13 @@ export default function MainSection({ hidden, setHidden }) {
     console.log("Response: ", response);
 
     if (response.status_code === 200) {
-      alert("Project created successfully!");
+      toast.success("Project created successfully!");
+      setProjects((prev) => [
+        ...prev,
+        { value: projectName, label: projectName },
+      ]);
+      setIsOpen(false);
+      setProjectName("");
     }
 
     // console.log("Creating project...");

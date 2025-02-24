@@ -1,24 +1,40 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import './Sidebar.css';
 import { assets } from '../../../assets/assets';
 import Button from '../Button';
 import { HelpIcon, MinusIcon, MoreIcon, PlusIcon, SettingsIcon } from "../../icons"
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../../Api/handlers/authHandler';
+import { ChatContext } from '../../../context/ChatContext';
+import { listFiles } from '../../../Api/handlers/chatHandler';
+import { toast } from 'react-toastify';
 
 export default function Sidebar({ hidden, setHidden }) {
+
+    const { files, setFiles, currentProject } = useContext(ChatContext)
 
     const navigate = useNavigate();
 
     async function handleLogout() {
         const response = await logout();
 
-        console.log(response);
+        console.log('response: ', response);
 
-        if (response.status_code === 200) {
+        if (response.error) {
             localStorage.removeItem('access_token');
             navigate('/');
+            toast.error('Failed to logout. You have been logged out automatically');
         }
+
+        if (response.status_code != 200) {
+            localStorage.removeItem('access_token');
+            navigate('/');
+            toast.error('Failed to logout. You have been logged out automatically');
+        }
+
+        localStorage.removeItem('access_token');
+        navigate('/');
+        toast.success('Logged out successfully!');
 
     }
 
@@ -80,6 +96,19 @@ export default function Sidebar({ hidden, setHidden }) {
         },
     ]);
 
+    useEffect(() => {
+        async function list() {
+
+            const response = await listFiles(currentProject.value);
+
+            if (response.length > 0) {
+                setFiles(response);
+            }
+        }
+
+        list()
+    }, [currentProject]);
+
     return (
         <aside className={`sidebar ${hidden ? 'hide__sidebar' : ''}`}>
             <div className="sidebar__header">
@@ -91,24 +120,40 @@ export default function Sidebar({ hidden, setHidden }) {
                     } />
                 </div>
             </div>
-            <div className="sidebar__button-container">
+            {/* <div className="sidebar__button-container">
                 <Button size='sm' className="sidebar__button">
                     <PlusIcon />
                     {"New Chat"}</Button>
-            </div>
+            </div> */}
             {/* <div className="sidebar__chat-list-container"> */}
-            <div className="sidebar__chat-list">
+            {/* <div className="sidebar__chat-list">
                 <div className="sidebar__chat-header">{"Recent Chats"}</div>
                 <div className="sidebar__chat-items">
                     {
-                        recentChats.map((chat, index) => {
+                        recentChats?.length > 0 ?
+                            recentChats.map((chat, index) => {
+                                return (
+                                    <div className="sidebar__chat-item" key={index}>
+                                        <span>{chat.title}</span>
+                                        <Button variant='ghost' size='sm' className="sidebar__chat-item-button"><MoreIcon /></Button>
+                                    </div>
+                                )
+                            }) : null
+                    }
+                </div>
+            </div> */}
+            <div className="sidebar__chat-list">
+                <div className="sidebar__chat-header">{"Recent Files"}</div>
+                <div className="sidebar__chat-items">
+                    {files?.length > 0 ?
+                        files.map((file, index) => {
                             return (
                                 <div className="sidebar__chat-item" key={index}>
-                                    <span>{chat.title}</span>
+                                    <span>{file}</span>
                                     <Button variant='ghost' size='sm' className="sidebar__chat-item-button"><MoreIcon /></Button>
                                 </div>
                             )
-                        })
+                        }) : null
                     }
                 </div>
             </div>

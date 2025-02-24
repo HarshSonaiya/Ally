@@ -19,7 +19,7 @@ function ChatInput({ newMessage, setNewMessage, messages, isLoading, submitNewMe
     function handleKeyDown(e) {
         if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
             e.preventDefault();
-            submitNewMessage();
+            submitNewMessage(isWebSearch);
         }
     }
 

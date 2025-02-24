@@ -34,40 +34,44 @@ async def add_headers(request, call_next):
 
 @app.middleware("http")
 async def validate_access_token(request: Request, call_next):
-    # Exclude specific routes from validation
-    excluded_paths = [
-        "/auth/google-auth",
-        "/",
-        "/docs",
-        "/favicon.ico",
-        "/openapi.json",
-        "/auth/google-callback",
-        "/refresh-token",
-    ]
+    try: 
+        # Exclude specific routes from validation
+        excluded_paths = [
+            "/auth/google-auth",
+            "/",
+            "/docs",
+            "/favicon.ico",
+            "/openapi.json",
+            "/auth/google-callback",
+            "/refresh-token",
+        ]
 
-    if request.url.path in excluded_paths or request.method == "OPTIONS":
+        if request.url.path in excluded_paths or request.method == "OPTIONS":
+            return await call_next(request)
+
+        authorization: str = request.headers.get("Authorization")
+        if authorization and authorization.startswith("Bearer "):
+            access_token = authorization.split(" ")[1]
+            access_token = access_token.strip()
+            logger.info(f"Access token received: {access_token}")
+            try:
+                response = requests.post(settings.TOKEN_INFO_URL, params={"access_token": access_token})
+                logger.info(f"Token info response: {response.json()}")
+                if response.status_code != 200:
+                    raise HTTPException(status_code=401, detail="Invalid or expired access token")
+                logger.info(f"Token info received: {response.json()}")
+                token_info = response.json()
+                request.state.user_id = token_info.get("user_id")
+                request.state.access_token = access_token
+            except HTTPException as e:
+                return Response(content=e.detail, status_code=e.status_code)
+        else:
+            return Response(content="Access token missing", status_code=401)
+
         return await call_next(request)
-
-    authorization: str = request.headers.get("Authorization")
-    if authorization and authorization.startswith("Bearer "):
-        access_token = authorization.split(" ")[1]
-        access_token = access_token.strip()
-        logger.info(f"Access token received: {access_token}")
-        try:
-            response = requests.post(settings.TOKEN_INFO_URL, params={"access_token": access_token})
-            logger.info(f"Token info response: {response.json()}")
-            if response.status_code != 200:
-                raise HTTPException(status_code=401, detail="Invalid or expired access token")
-            logger.info(f"Token info received: {response.json()}")
-            token_info = response.json()
-            request.state.user_id = token_info.get("user_id")
-            request.state.access_token = access_token
-        except HTTPException as e:
-            return Response(content=e.detail, status_code=e.status_code)
-    else:
-        return Response(content="Access token missing", status_code=401)
-
-    return await call_next(request)
+    except Exception as e:
+        logger.info(f"exception: {e}")
+        raise HTTPException(status_code=401, detail=e)
 
 # Register the routers
 app.include_router(auth_router)

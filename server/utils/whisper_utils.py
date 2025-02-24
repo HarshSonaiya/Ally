@@ -13,7 +13,7 @@ def transcribe_audio(file: str) -> str:
     start_time = datetime.datetime.now()
     
     logger.info(f"Begining transcription \n Time:{start_time}")
-    audio = whisper.load_audio(file)
+    audio = whisper.load_audio(r"D:\collage\8th_sem\Projects\Navio\server\uploads\speaker_1.wav")
     logger.info("Audio loaded successfully")
     model = whisper.load_model("medium")
     logger.info("Model Loaded successfully")

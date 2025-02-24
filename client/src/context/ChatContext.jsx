@@ -9,9 +9,10 @@ export const ChatProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [files, setFiles] = useState(null);
 
   return (
-    <ChatContext.Provider value={{ fileRef, projects, setProjects, currentProject, setCurrentProject, messages, setMessages }}>
+    <ChatContext.Provider value={{ fileRef, projects, setProjects, currentProject, setCurrentProject, messages, setMessages, files, setFiles }}>
       {children}
     </ChatContext.Provider>
   );

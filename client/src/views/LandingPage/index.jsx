@@ -5,6 +5,8 @@ import { assets } from '../../assets/assets';
 import './LandingPage.css';
 import { Hamburger } from '../../components/icons';
 import { logout } from '../../Api/handlers/authHandler';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Index = () => {
 
@@ -42,11 +44,26 @@ const response = await ally.analyze({
   async function handleLogout() {
     const response = await logout();
 
-    if (response.status_code === 200) {
+    console.log('response: ', response);
+
+    if (response.error) {
       localStorage.removeItem('access_token');
       setAuth(null);
       navigate('/');
+      toast.error('Failed to logout. You have been logged out automatically');
     }
+
+    if (response.status_code != 200) {
+      localStorage.removeItem('access_token');
+      setAuth(null);
+      navigate('/');
+      toast.error('Failed to logout. You have been logged out automatically');
+    }
+
+    localStorage.removeItem('access_token');
+    setAuth(null);
+    navigate('/');
+    toast.success('Logged out successfully!');
   }
 
   return (
