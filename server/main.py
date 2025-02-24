@@ -49,24 +49,22 @@ async def validate_access_token(request: Request, call_next):
         if request.url.path in excluded_paths or request.method == "OPTIONS":
             return await call_next(request)
 
-        authorization: str = request.headers.get("Authorization")
-        if authorization and authorization.startswith("Bearer "):
-            access_token = authorization.split(" ")[1]
-            access_token = access_token.strip()
-            logger.info(f"Access token received: {access_token}")
-            try:
-                response = requests.post(settings.TOKEN_INFO_URL, params={"access_token": access_token})
-                logger.info(f"Token info response: {response.json()}")
-                if response.status_code != 200:
-                    raise HTTPException(status_code=401, detail="Invalid or expired access token")
-                logger.info(f"Token info received: {response.json()}")
-                token_info = response.json()
-                request.state.user_id = token_info.get("user_id")
-                request.state.access_token = access_token
-            except HTTPException as e:
-                return Response(content=e.detail, status_code=e.status_code)
-        else:
-            return Response(content="Access token missing", status_code=401)
+    authorization: str = request.headers.get("Authorization")
+    if authorization and authorization.startswith("Bearer "):
+        access_token = authorization.split(" ")[1]
+        access_token = access_token.strip()
+        logger.info(f"Access token received: {access_token}")
+        try:
+            response = requests.post(settings.TOKEN_INFO_URL, params={"access_token": access_token})
+            if response.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid or expired access token")
+            token_info = response.json()
+            request.state.user_id = token_info.get("user_id")
+            request.state.access_token = access_token
+        except HTTPException as e:
+            return Response(content=e.detail, status_code=e.status_code)
+    else:
+        return Response(content="Access token missing", status_code=401)
 
         return await call_next(request)
     except Exception as e:

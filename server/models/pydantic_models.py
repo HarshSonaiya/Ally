@@ -48,6 +48,7 @@ class WebSearchRequest(BaseModel):
 
 class ClassifyQuery(BaseModel):
     query: str = Field(..., description="Extract the actual user query to respond to.")
+    phrases: List[str] = Field(..., description="A list of extracted phrases from the user query tp search for while searching for news articles.")
     category: str = Field(..., description="The classified category of the user query. Possible values: 'General Query', 'Audio Files Related Query', 'PDF File Related Query', 'News Explain Query', 'Unknown Query'.")
     keywords: List[str] = Field(..., description="A list of extracted essential keywords from the user query.")
     start_timestamp: Optional[str] = Field(None, description="The extracted start timestamp if any, otherwise None.")

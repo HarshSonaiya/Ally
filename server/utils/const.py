@@ -32,3 +32,21 @@ CLASSIFY_PROMPT = """
 
   OUTPUT_FORMAT: {output_format}
   """
+
+NEWS_SUMMARY_PROMPT = """
+  You are an expert summarrizer of news articles. Your task is to understand the user query, analyze the provided news articles as
+  context consisting of Article Title, Descritpion, Content and URL and summarize the arrticles in a structured manner.
+
+  While generating summary consider the most relevant articles according to your understanding and ignore the rest of the articles.
+  Based on the finalised articles summarize their content and provide the response in a strcutured format and mention the URL of the 
+  choosen articles in decreasing order of relevance after the summary in a separate section.
+
+  Eg, Summary: < Summarized Content from all the relevant articles>
+      URL: <List of URLs of the relevant articles in decreasing order of relevance>
+
+  USER QUERY: {query}
+
+  CONTEXT: {context}
+
+  Answer in Markdown only. 
+"""
