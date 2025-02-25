@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 import requests
 from routes.routes import auth_router, workspace_router, query_router
 import logging
+import json
 from config import settings
 
 app = FastAPI()
@@ -17,27 +18,25 @@ logger = logging.getLogger("main")
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
+# Common security headers
+SECURITY_HEADERS = {
+    "Access-Control-Allow-Origin": "http://localhost:5173",
+    "Access-Control-Allow-Credentials": "true",
+    "X-Content-Type-Options": "nosniff",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Embedder-Policy": "require-corp",
+}
+
+
 @app.middleware("http")
 async def validate_access_token(request: Request, call_next):
-<<<<<<< Updated upstream
-    try: 
-        # Exclude specific routes from validation
-        excluded_paths = [
-            "/auth/google-auth",
-            "/",
-            "/docs",
-            "/favicon.ico",
-            "/openapi.json",
-            "/auth/google-callback",
-            "/refresh-token",
-        ]
-=======
     excluded_paths = [
         "/auth/google-auth",
         "/auth/google-callback",
@@ -48,49 +47,71 @@ async def validate_access_token(request: Request, call_next):
         "/openapi.json",
         "/refresh-token",
     ]
->>>>>>> Stashed changes
 
-        if request.url.path in excluded_paths or request.method == "OPTIONS":
-            return await call_next(request)
+    if request.url.path in excluded_paths or request.method == "OPTIONS":
+        return await call_next(request)
 
     authorization: str = request.headers.get("Authorization")
-
-    if authorization and authorization.startswith("Bearer "):
-        access_token = authorization.split(" ")[1].strip()
-        logger.info(f"Access token received: {access_token}")
+    if not authorization or not authorization.startswith("Bearer "):
         
-        try:
-            response = requests.post(settings.TOKEN_INFO_URL, params={"access_token": access_token})
-            if response.status_code != 200:
-                logger.warning("Invalid or expired access token")
-                return JSONResponse(content={"error": "Invalid or expired access token"}, status_code=401)
-
-            token_info = response.json()
-            request.state.user_id = token_info.get("user_id")
-            request.state.access_token = access_token
-        except Exception as e:
-            logger.error(f"Authentication failed: {str(e)}")
-            return JSONResponse(content={"error": "Authentication failed", "detail": str(e)}, status_code=500)
-    else:
         logger.warning("Unauthorized request: Access token missing")
-        return JSONResponse(content={"error": "Unauthorized request"}, status_code=401)
+        # Return JSON response (Redirect not needed since this comes from the frontend)
+        return JSONResponse(
+            content=json.dumps({"error": "Unauthorized request"}),
+            status_code=401,
+            headers=SECURITY_HEADERS,
+        )
 
-<<<<<<< Updated upstream
-        return await call_next(request)
+    access_token = authorization.split(" ")[1].strip()
+    logger.info(f"Validating Access Token.")
+
+    try:
+        response = requests.post(
+            settings.TOKEN_INFO_URL, params={"access_token": access_token}
+        )
+        if response.status_code != 200:
+            logger.warning("Invalid or expired access token")
+
+            if request.url.path == "/auth/google-callback":
+                redirect_response = RedirectResponse(
+                    url="http://localhost:5173?error=invalid_access_token"
+                )
+                redirect_response.delete_cookie("refresh_token")
+                redirect_response.headers.update(SECURITY_HEADERS)
+                logger.warning("Invalid access token")
+                return redirect_response
+            
+            response = Response(
+                content=json.dumps({"error": "Expired access token"}),
+                status_code=401,
+                headers=SECURITY_HEADERS,
+            )
+            response.delete_cookie("refresh_token")
+            logger.warning("Expired access token")
+            return response
+
+        token_info = response.json()
+        request.state.user_id = token_info.get("user_id")
+        request.state.access_token = access_token
+
     except Exception as e:
-        logger.info(f"exception: {e}")
-        raise HTTPException(status_code=401, detail=e)
-=======
-    response =  await call_next(request)
-    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-    response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+        logger.error(f"Authentication failed: {str(e)}")
+        return JSONResponse(
+            content=json.dumps({"error": f"Authentication failed: {str(e)}"}),
+            status_code=500,
+            headers=SECURITY_HEADERS,
+        )
+
+    response = await call_next(request)
+    response.headers.update(SECURITY_HEADERS)
     return response
->>>>>>> Stashed changes
+
 
 # Register the routers
 app.include_router(auth_router)
 app.include_router(workspace_router)
 app.include_router(query_router)
+
 
 @app.get("/")
 def read_root():

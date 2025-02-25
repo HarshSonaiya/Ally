@@ -2,6 +2,7 @@ from config import settings
 import requests
 import logging
 from fastapi import HTTPException
+from datetime import datetime, timezone, timedelta
 
 # Configure logging
 logging.basicConfig(
@@ -44,17 +45,19 @@ class AuthService:
             if token_response.status_code != 200:
                 raise HTTPException(status_code=401, detail=f"Token exchange failed: {token_response.text}")
             
+            token_created_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
             print(f"Token exchanged successfully {token_response}")
             
             tokens = token_response.json()
             access_token = tokens.get('access_token')
             refresh_token = tokens.get('refresh_token')
             expires_in = tokens.get('expires_in')
+            expires_at = token_created_at + timedelta(seconds=expires_in)
 
             return {
                 "access_token":access_token,
                 "refresh_token":refresh_token,
-                "expires_in":expires_in
+                "expires_at":expires_at
             }
         except Exception as e:
             logger.error(f"Error occured: {e}")

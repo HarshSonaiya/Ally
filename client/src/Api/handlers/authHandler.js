@@ -6,11 +6,9 @@ export async function exchangeAuthCode(authCode) {
       method: "POST",
       endpoint: `/auth/exchange-token?auth_code=${authCode}`
     });
-    console.log("response:", response.data)
-    console.log("response:", response.data.access_token)
 
-    if (response && response.data.access_token) {
-      return response.data.access_token;
+    if (response && response.data) {
+      return [response.data.access_token, response.data.expires_at];
     } else {
       console.error("Failed to get access token");
       return null;
@@ -25,7 +23,7 @@ export function logout() {
   try {
     const response = axiosRequest({
       method: "GET",
-      endpoint: "/auth/logout",
+      endpoint: "/auth/logout"
     });
 
     return response || null;

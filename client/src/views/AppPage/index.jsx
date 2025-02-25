@@ -21,20 +21,18 @@ export default function AppPage() {
       const authCode = urlParams.get("auth_code");
 
       if (authCode) {
-        const accessToken = await exchangeAuthCode(authCode);
+        const [accessToken, expiresAt] = await exchangeAuthCode(authCode);
         
         if (accessToken) {
           localStorage.setItem("access_token", accessToken);  // Store token
+          localStorage.setItem("expires_at", expiresAt); // Store expiry time of the access token
           window.history.replaceState({}, document.title, "/chat");  // Clean URL
-          console.log("Access TOken set")
         } else {
-          console.error("Access token missing")
           navigate("/"); // Redirect to login page if token exchange fails
         }
       } else {
         const storedToken = localStorage.getItem("access_token");
         if (!storedToken) {
-          console.error("Acess token not stored.")
           navigate("/");  // Redirect if no token is available
         }
       }

@@ -70,8 +70,9 @@ class AuthController:
             token_response = await self.auth_service.get_access_token(auth_code)
             access_token = token_response.get("access_token")
             refresh_token = token_response.get("refresh_token")
+            expires_at = token_response.get("expires_at")
 
-            if not access_token or not refresh_token:
+            if not access_token or not refresh_token or not expires_at:
                 raise HTTPException(status_code=401, detail="Token Exchange failed.")
 
             logger.info(f"Access and Refresh token received from Google. {access_token} and {refresh_token}")
@@ -112,7 +113,11 @@ class AuthController:
                 secure=False,
                 max_age=60 * 60 * 24 * 30,
             )
-            return send_response(200, "Authentication Successfully.", {"access_token": access_token})
+            data = {
+                "access_token": access_token,
+                "expires_at": expires_at
+                }
+            return send_response(200, "Authentication Successfully.", data)
         except Exception as e: 
             logger.error(f"Error exchagning tokens: {e}", exc_info=True)
             return HTTPException(status_code=500, detail=f"Server Error: {e}.")
