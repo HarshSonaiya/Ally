@@ -11,6 +11,7 @@ auth_router = APIRouter(prefix="/auth", tags=["User Authentication"])
 auth_controller = AuthController()
 auth_router.get("/google-auth")(auth_controller.google_auth)
 auth_router.get("/google-callback")(auth_controller.google_callback)
+auth_router.post("/exchange-token")(auth_controller.exchange_token)
 auth_router.get("/logout/")(auth_controller.logout)
 
 # Workspace Routes

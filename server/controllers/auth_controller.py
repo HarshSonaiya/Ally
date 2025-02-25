@@ -1,7 +1,7 @@
 import logging
 import httpx
 from datetime import datetime, timezone
-from fastapi import HTTPException, Request, Response, Depends
+from fastapi import HTTPException, Request, Response
 from fastapi.responses import RedirectResponse, JSONResponse
 from pymongo.errors import DuplicateKeyError
 from models.user_model import UserModel
@@ -41,7 +41,7 @@ class AuthController:
         logger.info("Request to signup or lgoin received.")
         return RedirectResponse(google_oauth_url)
 
-    async def google_callback(self, request: Request, response: Response):
+    async def google_callback(self, request: Request):
         try:
             auth_code = request.query_params.get("code")
             if not auth_code:
@@ -49,8 +49,23 @@ class AuthController:
                     status_code=400, detail="Authorization code is required."
                 )
 
-            logger.info(f"Authorization code received from Google.")
-
+            logger.info(f"Authorization code received from Google. {auth_code}")
+            return RedirectResponse(
+                url=f"http://localhost:5173/chat?auth_code={auth_code}",
+                status_code=303
+            )
+        except Exception as e:
+            logger.error(f"Error in Google auth: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+    
+    async def exchange_token(self, auth_code: str, response: Response):
+        """
+        Exchanges the authorization code for access token and refresh token and stores the user data.
+        """
+        try: 
+            if not auth_code: 
+                raise HTTPException(status_code=400, detail="Authorization Code is required.")
+            
             # Exchange auth code for tokens
             token_response = await self.auth_service.get_access_token(auth_code)
             access_token = token_response.get("access_token")
@@ -59,7 +74,7 @@ class AuthController:
             if not access_token or not refresh_token:
                 raise HTTPException(status_code=401, detail="Token Exchange failed.")
 
-            logger.info(f"Access and Refresh token received from Google.")
+            logger.info(f"Access and Refresh token received from Google. {access_token} and {refresh_token}")
 
             # Extract user info from ID token (frontend will decode this too)
             user_info = await self.auth_service.get_user_info(access_token)
@@ -72,7 +87,6 @@ class AuthController:
                 )
 
             logger.info(f"User information received from Google.")
-
             # Store user records in MongoDB
             user_data = {
                 "email": email,
@@ -85,29 +99,24 @@ class AuthController:
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
 
-            logger.info(f"Stroing user data.")
+            logger.info(f"Storing user data.")
             if await self.store_user(user_data):
                 logger.info(f"User data stored succcessfully.")
             else:
-                logger.info(f"User data stored succcessfully.")
+                logger.info(f"Failed to store user data.")
 
-            response = RedirectResponse(
-                url=f"http://localhost:5173/chat?access_token={access_token}",
-                status_code=303,
-            )
             response.set_cookie(
                 key="refresh_token",
                 value=refresh_token,
                 httponly=True,
                 secure=False,
-                # samesite="None",
                 max_age=60 * 60 * 24 * 30,
             )
-            return response
-        except Exception as e:
-            logger.error(f"Error in Google auth: {e}")
-            raise HTTPException(status_code=500, detail="Internal server error")
-
+            return send_response(200, "Authentication Successfully.", {"access_token": access_token})
+        except Exception as e: 
+            logger.error(f"Error exchagning tokens: {e}", exc_info=True)
+            return HTTPException(status_code=500, detail=f"Server Error: {e}.")
+        
     # async def refresh_token(self, request: Request):
     #     """
     #     Refresh access token using stored refresh token.

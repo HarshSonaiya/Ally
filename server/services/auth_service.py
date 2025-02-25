@@ -1,6 +1,7 @@
 from config import settings
 import requests
 import logging
+from fastapi import HTTPException
 
 # Configure logging
 logging.basicConfig(
@@ -41,7 +42,8 @@ class AuthService:
             
             token_response = requests.post(self.GOOGLE_TOKEN_URI, data=token_data)
             if token_response.status_code != 200:
-                raise Exception(f"Token exchange failed: {token_response.text}")
+                raise HTTPException(status_code=401, detail=f"Token exchange failed: {token_response.text}")
+            
             print(f"Token exchanged successfully {token_response}")
             
             tokens = token_response.json()

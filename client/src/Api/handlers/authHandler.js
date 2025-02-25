@@ -1,5 +1,26 @@
 import { axiosRequest } from "../axios";
 
+export async function exchangeAuthCode(authCode) {
+  try {
+    const response = await axiosRequest({
+      method: "POST",
+      endpoint: `/auth/exchange-token?auth_code=${authCode}`
+    });
+    console.log("response:", response.data)
+    console.log("response:", response.data.access_token)
+
+    if (response && response.data.access_token) {
+      return response.data.access_token;
+    } else {
+      console.error("Failed to get access token");
+      return null;
+    }
+  } catch (error) {
+    console.error("Auth Code Exchange Error:", error);
+    return null;
+  }
+}
+
 export function logout() {
   try {
     const response = axiosRequest({
