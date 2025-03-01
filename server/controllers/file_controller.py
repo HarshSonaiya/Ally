@@ -45,12 +45,7 @@ class FileController:
                 for hit in response["hits"]["hits"]:
                     # Extract file details
                     file_data = hit["_source"]
-                    files.append(
-                        {
-                            "filename": file_data["filename"],
-                            "file_id": file_data["file_id"],
-                        }
-                    )
+                    files.append(file_data["filename"])
                 return files
             else:
                 return []  # Return an empty list if no files are found
@@ -72,13 +67,13 @@ class FileController:
                     logger.info(f"Processing media file {file.filename}")
                     
                     media_results = await self.file_service.process_audio_video_files(file)
-                    logger.info(f"Media processing completed for {file.filename} results: {media_results}")
+                    logger.info(f"Media processing completed for {file.filename}")
                     
                     workspace_id = await self.get_workspace_id(request.state.user_id, workspace_name)
-                    logger.info(f"Workspace ID: {workspace_id}")
+                    logger.info(f"Workspace ID fetched successfully.")
 
                     # Store Transcript in Elasticsearch
-                    file_id = await self.elastic_service.store_in_elastic(
+                    await self.elastic_service.store_in_elastic(
                         workspace_name=workspace_id,
                         filename=file.filename,
                         content_type="transcript",
@@ -179,3 +174,5 @@ class FileController:
         workspace_id = mapping_response["hits"]["hits"][0]["_source"]["workspace_id"]
         return workspace_id
     
+    # async def remove_file(self, request: RemoveFileRequest) :
+    #     pass

@@ -54,3 +54,9 @@ class ClassifyQuery(BaseModel):
     start_timestamp: Optional[str] = Field(None, description="The extracted start timestamp if any, otherwise None.")
     end_timestamp: Optional[str] = Field(None, description="The extracted end timestamp if any, otherwise None.")
     
+class RemoveFileRequest(BaseModel):
+    workspace_name: str
+
+class AnswerQuery(BaseModel):
+    workspace_name: str
+    query:str

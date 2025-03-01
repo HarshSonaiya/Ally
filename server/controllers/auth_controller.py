@@ -51,7 +51,7 @@ class AuthController:
 
             logger.info(f"Authorization code received from Google. {auth_code}")
             return RedirectResponse(
-                url=f"http://localhost:5173/chat?auth_code={auth_code}",
+                url=f"http://localhost:5173?auth_code={auth_code}",
                 status_code=303
             )
         except Exception as e:

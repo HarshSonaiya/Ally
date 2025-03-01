@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import { assets } from '../../assets/assets';
@@ -7,20 +7,56 @@ import { Hamburger } from '../../components/icons';
 import { logout } from '../../Api/handlers/authHandler';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { exchangeAuthCode } from '../../Api/handlers/authHandler.js';
 
 const Index = () => {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [auth, setAuth] = useState(null);
+  const hasRun = useRef(false);
   const navigate = useNavigate();
-
+  
   useEffect(() => {
-    const access_token = localStorage.getItem('access_token');
-    if (access_token) {
-      setAuth(access_token);
-    }
-  }, []);
+    const checkAuthStatus = async () => {
+      if (hasRun.current) return; // Prevent multiple executions
+      hasRun.current = true;
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const authCode = urlParams.get("auth_code");
+      const storedToken = localStorage.getItem("access_token");
+      const expiresAt = localStorage.getItem("expires_at");
+
+      // Check if stored token exists and is still valid
+      if (storedToken && expiresAt) {
+        const expiryTime = new Date(expiresAt);
+        if (expiryTime > new Date()) {
+          setAuth(storedToken);
+          return;
+        } else {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("expires_at");
+        }
+      }
+
+      // If auth code is present, exchange it for a token
+      if (authCode) {
+        const [accessToken, tokenExpiry] = await exchangeAuthCode(authCode);
+
+        if (accessToken) {
+          localStorage.setItem("access_token", accessToken);
+          localStorage.setItem("expires_at", tokenExpiry);
+          setAuth(accessToken);
+          navigate("/chat")
+        } else {
+          navigate("/"); // Redirect to login if exchange fails
+        }
+      } else {
+        navigate("/"); // Redirect to login if no token or auth code is available
+      }
+    };
+
+    checkAuthStatus();
+  }, [setAuth, exchangeAuthCode, navigate]);
 
   const toggleMenu = () => {
     setMenuOpen(prevState => !prevState);

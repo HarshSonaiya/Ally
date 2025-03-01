@@ -23,7 +23,7 @@ class FileProcessingService:
 
         try:
             file_path = await self.save_file_temporarily(file)
-            
+            file_path = os.path.abspath(file_path)
             logger.info(f"filepath: {file_path}")
             
             segments = transcribe_audio(file_path)

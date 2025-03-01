@@ -45,14 +45,15 @@ class AuthService:
             if token_response.status_code != 200:
                 raise HTTPException(status_code=401, detail=f"Token exchange failed: {token_response.text}")
             
-            token_created_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+            token_created_at = datetime.now(timezone.utc)
             print(f"Token exchanged successfully {token_response}")
             
             tokens = token_response.json()
+            logger.info(f"Tokens: {tokens}")
             access_token = tokens.get('access_token')
             refresh_token = tokens.get('refresh_token')
             expires_in = tokens.get('expires_in')
-            expires_at = token_created_at + timedelta(seconds=expires_in)
+            expires_at = (token_created_at + timedelta(seconds=expires_in)).isoformat() # Convert to string.
 
             return {
                 "access_token":access_token,
