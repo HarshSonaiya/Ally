@@ -1,19 +1,69 @@
 import uuid
-import tqdm
-from config import get_es_client
-from fastapi import HTTPException, Request
+from config import settings
+from fastapi import HTTPException
 import logging
-from langchain.docstore.document import Document
-from typing import List
-from elasticsearch.helpers import bulk
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ElasticsearchService:
-    def __init__(self):
-        self.es = get_es_client()
+    def __init__(self, es_client):
+        self.es_client = es_client
+    
+    async def get_workspace_id(self, user_id: str, workspace_name: str):
+        """
+        Retrieves the workspace id for the user selected workspace name from the mappings collection.
+        """
+        mapping_query = {
+                "query": {
+                    "bool": {
+                        "must": [
+                            {"term": {"workspace_name": workspace_name}},
+                            {"term": {"user_id": user_id}}
+                        ]
+                    }
+                },
+                "_source": ["workspace_id"]  # Fetch only workspace_id
+            }
 
+        mapping_response = self.es_client.search(
+            index=settings.MAPPINGS_COLLECTION, body=mapping_query
+        )
+
+        if not mapping_response["hits"]["hits"]:
+            return {"error": "Workspace not found or unauthorized access."}
+
+        workspace_id = mapping_response["hits"]["hits"][0]["_source"]["workspace_id"]
+        return workspace_id
+    
+    async def fetch_files(self, user_id: str, workspace_name: str):
+        """
+        Retrives the user uploaded audio files from a specific workspace from elasticsearch collection.
+        """
+
+        # Retrieve the index name from workspace_mappings
+        workspace_id = await self.get_workspace_id(user_id, workspace_name)
+        logger.info(f"Retrieved workspace id for the workspace name: {workspace_name}")
+
+        # Perform an Elasticsearch search query on the specified workspace index
+        query = {"query": {"match_all": {}}}
+
+        # Query Elasticsearch for all documents in the workspace index
+        response = self.es_client.search(
+            index=workspace_id, body=query
+        )
+
+        # Check if we got results
+        if response["hits"]["total"]["value"] > 0:
+            files = []
+            for hit in response["hits"]["hits"]:
+                # Extract file details
+                file_data = hit["_source"]
+                files.append(file_data["filename"])
+            return files
+        else:
+            return []  # Return an empty list if no files are found
+    
     async def create_workspace_index(self, user_id: str, workspace_name: str) -> dict:
         """
         Create an index in Elasticsearch for the workspace
@@ -27,8 +77,8 @@ class ElasticsearchService:
         logger.info(f"User id in create workspace: {user_id}")        
 
         # Check for workspace with existing name
-        if self.es.indices.exists(index="workspace_mappings"):
-            response = self.es.search(
+        if self.es_client.indices.exists(index="workspace_mappings"):
+            response = self.es_client.search(
                     index="workspace_mappings",
                     body={
                     "query": {
@@ -47,7 +97,7 @@ class ElasticsearchService:
                 return {"message": f"Workspace {workspace_name} already exists."}
 
         index_name = uuid.uuid4().hex
-        response = self.es.indices.create(
+        response = self.es_client.indices.create(
             index=index_name,
             settings={
                 "number_of_shards": 1,
@@ -103,8 +153,8 @@ class ElasticsearchService:
             try:
                 logger.info(f"User id in store mappings: {user_id}")
                 # Ensure the 'workspace_mappings' index exists
-                if not self.es.indices.exists(index="workspace_mappings"):
-                    self.es.indices.create(
+                if not self.es_client.indices.exists(index="workspace_mappings"):
+                    self.es_client.indices.create(
                         index="workspace_mappings",
                         mappings= {
                             "properties": {
@@ -122,7 +172,7 @@ class ElasticsearchService:
                     "user_id": user_id
                 }
 
-                self.es.index(index="workspace_mappings", id=workspace_name, body=doc)
+                self.es_client.index(index="workspace_mappings", id=workspace_name, body=doc)
                 return {"message": f"Workspace mapping for {workspace_name} stored successfully with ID {workspace_id}."}
             except Exception as e:
                 return {"error": f"Error storing workspace mapping: {str(e)}"}
@@ -136,7 +186,7 @@ class ElasticsearchService:
             """
             try:
                 # Query to fetch all documents from the workspace_mappings index
-                response = self.es.search(
+                response = self.es_client.search(
                     index="workspace_mappings",
                     body={
                         "query": {
@@ -196,7 +246,7 @@ class ElasticsearchService:
             ]
         try:
             # Index document into Elasticsearch
-            self.es.index(index=workspace_name, id=file_id, body=doc)
+            self.es_client.index(index=workspace_name, id=file_id, body=doc)
             logger.info(f"Successfully indexed document with file_id {file_id}")
             
         except Exception as e:
@@ -206,68 +256,10 @@ class ElasticsearchService:
                 detail=f"Error storing data in Elasticsearch: {str(e)}"
             )
 
-    async def index_hybrid_collection(self, chunks: List[Document], brain_id: str, batch_size: int = 64):
-        """
-        Index the given list of Document chunks into Elasticsearch.
-        """
-        logger.info(f"Indexing {len(chunks)} documents into Elasticsearch Hybrid Collection.")
-
-        try:
-            invalid_chunks = 0
-            batched_chunks = [
-                chunks[i : i + batch_size] for i in range(0, len(chunks), batch_size)
-            ]
-
-            for batch_idx, batch in enumerate(tqdm(batched_chunks, desc="Processing batches")):
-                actions = []
-                for i, doc in enumerate(batch):
-                    try:
-                        dense_embedding = self.create_dense_vector(doc.page_content)
-                    except Exception as e:
-                        logger.exception(f"Error creating dense vector for document {i}: {e}")
-                        dense_embedding = None
-
-                    try:
-                        sparse_embedding = self.create_sparse_vector(doc.page_content)
-                    except Exception as e:
-                        logger.exception(f"Error creating sparse vector for document {i}: {e}")
-                        sparse_embedding = None
-
-                    if dense_embedding is not None and sparse_embedding is not None:
-                        doc_id = str(uuid.uuid4())
-                        # Determine content type (transcript or PDF)
-                        content_type = "transcript" if "transcript" in doc.metadata else "pdf"
-
-                        actions.append({
-                            "_index": self.index_name,
-                            "_id": doc_id,
-                            "_source": {
-                                "brain_id": brain_id,
-                                "doc_id": doc_id,
-                                "content_type": content_type,
-                                "content": doc.page_content,
-                                "metadata": doc.metadata,
-                                "dense_embedding": dense_embedding,
-                                "sparse_embedding": sparse_embedding,
-                            },
-                        })
-                    else:
-                        logger.warning(f"Skipping indexing for document {i} due to failed embeddings.")
-                        invalid_chunks += 1
-                  # Bulk insert into Elasticsearch
-                if actions:
-                    bulk(self.es_client, actions)
-                    logger.info(f"Indexed {len(actions)} documents into Elasticsearch.")
-
-            return invalid_chunks == 0
-        except Exception as e:
-            logger.exception(f"Error occurred during batch indexing: {e}")
-            return False
-  
     def retrieve_from_elastic(self, workspace_name: str, file_id: str) -> dict:
         
         try:
-            response = self.es.get(index=workspace_name, id=file_id)
+            response = self.es_client.get(index=workspace_name, id=file_id)
             return response["_source"]
         except Exception as e:
             return {"error": f"Error retrieving data from {workspace_name}: {str(e)}"}

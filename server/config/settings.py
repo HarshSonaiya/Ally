@@ -19,6 +19,9 @@ class AppSettings:
         self.USER_INFO_URI = os.getenv("USER_INFO_URI")
         self.REVOKE_TOKEN_URL = os.getenv("REVOKE_TOKEN_URL")
         self.TOKEN_INFO_URL = os.getenv("TOKEN_INFO_URL")
+        self.USERS_COLLECTION = os.getenv("USERS_COLLECTION")
+        self.FRONTEND_AUTH_URL = os.getenv("FRONTEND_AUTH_URL")
+        self.FRONTEND_ERROR_URL = os.getenv("FRONTEND_ERROR_URL")
         
         self.HOST = os.getenv("MAIL_HOST")
         self.PORT = os.getenv("MAIL_PORT")
@@ -42,5 +45,6 @@ class AppSettings:
         self.SUMMARY_MODEL_NAME = os.getenv("SUMMARY_MODEL_NAME")
 
         self.NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
-        
+        self.MAPPINGS_COLLECTION = os.getenv("MAPPINGS_COLLECTION")
+
 settings = AppSettings()

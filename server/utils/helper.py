@@ -16,6 +16,7 @@ def send_response(status_code: int, message: str, data: dict = None):
         dict: A structured response object
     """
     response = {
+        "success": True,
         "message": message,
         "data": data or None
     }

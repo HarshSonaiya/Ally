@@ -51,7 +51,7 @@ NEWS_SUMMARY_PROMPT = """
   Answer in Markdown only. 
 """
 
-summary_prompt = """
+SUMMARY_PROMPT = """
   You are an intelligent assistant that summarizes audio transcripts. 
   A user has asked: {query}
   Below are relevant excerpts from the transcript:

@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 class WorkspaceController:
 
-    def __init__(self):
-        self.elastic_service = ElasticsearchService()
+    def __init__(self, es_client):
+        self.elastic_service = ElasticsearchService(es_client)
         
     async def create_workspace(self, request: Request, workspace: WorkspaceRequest) -> dict:
         """

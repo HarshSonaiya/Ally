@@ -20,7 +20,10 @@ axiosInstance.interceptors.request.use(function accessTokenInterceptor(config) {
 });
 
 axiosInstance.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    console.log("Full response: ", response);
+    return response.data
+  },
   function errorHandlingInterceptor(error) {
     console.error(error)
     if (axios.isCancel(error)) {

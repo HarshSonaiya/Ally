@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class FileController:
-    def __init__(self):
+    def __init__(self, es_client):
         self.file_service = FileProcessingService()
-        self.elastic_service = ElasticsearchService()
+        self.elastic_service = ElasticsearchService(es_client)
 
     async def get_files(self, request: Request, workspace_name: str):
         """
@@ -27,51 +27,34 @@ class FileController:
         :return: List of files in the specified workspace.
         """
         try:
-            # Retrieve the index name from workspace_mappings
-            workspace_id = await self.get_workspace_id(request.state.user_id, workspace_name)
-            logger.info(f"Retrieved workspace id for the workspace name: {workspace_name}")
-
-            # Perform an Elasticsearch search query on the specified workspace index
-            query = {"query": {"match_all": {}}}
-
-            # Query Elasticsearch for all documents in the workspace index
-            response = self.elastic_service.es.search(
-                index=workspace_id, body=query
+            files = await self.elastic_service.fetch_files(
+                request.state.user_id,
+                workspace_name
             )
-
-            # Check if we got results
-            if response["hits"]["total"]["value"] > 0:
-                files = []
-                for hit in response["hits"]["hits"]:
-                    # Extract file details
-                    file_data = hit["_source"]
-                    files.append(file_data["filename"])
-                return files
-            else:
-                return []  # Return an empty list if no files are found
+            if files: 
+                return send_response(200, "Files retrieved successfully.", files)
+            else: 
+                return send_response(200, "No files found.", files)
         except Exception as e:
             print(f"Error fetching files from workspace '{workspace_name}': {e}")
             return []
 
     async def process_file(self, request: Request, workspace_name: str, background_tasks: BackgroundTasks, files: List[UploadFile] = File(...)):
         try:
+            workspace_id = await self.elastic_service.get_workspace_id(request.state.user_id, workspace_name)
+            logger.info(f"Workspace ID fetched successfully.")
+
             results = []
+
             for file in files:
-                file_extension = os.path.splitext(file.filename)[1].lower()
-                logger.info(f"Received file extension: {file_extension}")
+                logger.info(f"Received file: {file.filename}")
 
-                # Validate file type based on content type or extension
-                valid_audio_video_extensions = [".wav", ".mp4", ".avi"]
-
-                if file_extension in valid_audio_video_extensions:
-                    logger.info(f"Processing media file {file.filename}")
-                    
-                    media_results = await self.file_service.process_audio_video_files(file)
+                media_results = await self.file_service.process_audio_video_files(file)
+                if media_results:
                     logger.info(f"Media processing completed for {file.filename}")
                     
-                    workspace_id = await self.get_workspace_id(request.state.user_id, workspace_name)
-                    logger.info(f"Workspace ID fetched successfully.")
-
+                    logger.info(f"Storing {file.filename} processed content in elasticsearch collection.")
+                    
                     # Store Transcript in Elasticsearch
                     await self.elastic_service.store_in_elastic(
                         workspace_name=workspace_id,
@@ -82,46 +65,10 @@ class FileController:
                         embeddings=media_results.get("embeddings", []),
                     )
                     results.append({"filename": file.filename, "summary": media_results.get("summary", "")})
-
-                elif file_extension == ".pdf":
-                    pass
-                    # logger.info(f"Processing file {file.filename}")
-    
-                    # all_chunks = []
-                    # file_uuid_mapping = {}
-                    
-                    # # Generate a unique ID for the PDF
-                    # pdf_id = str(uuid.uuid4())
-                    # file_uuid_mapping[file.filename] = pdf_id
-                    # logger.info(
-                    #     "Generated unique ID for file %s: %s", file.filename, pdf_id
-                    # )
-
-                    # chunks = await pdf_service.extract_content_from_pdf(file)
-
-                    # # Assign metadata to chunks
-                    # for chunk in chunks:
-                    #     chunk.metadata.update(
-                    #         {
-                    #             "pdf_id": pdf_id,
-                    #             "file_name": file.filename,
-                    #             "workspace_id": workspace_id,
-                    #         }
-                    #     )
-                    # all_chunks.extend(chunks)
-                    # logger.info(
-                    #     "File %s processed and %d chunks generated.",
-                    #     file.filename,
-                    #     len(chunks),
-                    # )
-
-                    # pdf_service.index_hybrid_collection(chunks, workspace_id)
-
                 else:
                     raise HTTPException(
-                        status_code=400, detail="Unsupported file type."
+                        status_code=400, detail=f"Unsupported file type for {file.filename}."
                     )
-
                 
                 background_tasks.add_task(
                     self.schedule_mail,
@@ -132,7 +79,7 @@ class FileController:
             if results:
                 return send_response(200, "Files processed successfully.", results)
             else:
-                return send_response(500, f"File Upload unsuccessfull.")
+                return send_response(500, f"File Upload unsuccessfull.", None)
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Error storing data in Elasticsearch: {str(e)}"
@@ -151,28 +98,6 @@ class FileController:
                 f"Failed to send email for file: {file_name}. Error: {str(e)}"
             )
 
-    async def get_workspace_id(self, user_id: str, workspace_name: str):
-        mapping_query = {
-                "query": {
-                    "bool": {
-                        "must": [
-                            {"term": {"workspace_name": workspace_name}},
-                            {"term": {"user_id": user_id}}
-                        ]
-                    }
-                },
-                "_source": ["workspace_id"]  # Fetch only workspace_id
-            }
-
-        mapping_response = self.elastic_service.es.search(
-            index="workspace_mappings", body=mapping_query
-        )
-
-        if not mapping_response["hits"]["hits"]:
-            return {"error": "Workspace not found or unauthorized access."}
-
-        workspace_id = mapping_response["hits"]["hits"][0]["_source"]["workspace_id"]
-        return workspace_id
     
     # async def remove_file(self, request: RemoveFileRequest) :
     #     pass

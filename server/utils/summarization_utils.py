@@ -1,8 +1,6 @@
 import logging
-from typing import Type
 from langchain_groq import ChatGroq
 from config import settings
-from services.processor import Processor
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,7 +11,15 @@ class SummarizationService:
     Centralized summarization service with a shared LLM instance.
     """
 
-    def __init__(
+    _instance = None  # Class-level variable to store the singleton instance
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(SummarizationService, cls).__new__(cls)
+            cls._instance._initialize(*args, **kwargs)  # Initialize once
+        return cls._instance
+    
+    def _initialize(
         self,
         llm_name: str = settings.GROQ_LLM_NAME,
         llm_api_key: str = settings.GROQ_API_KEY,
@@ -23,19 +29,11 @@ class SummarizationService:
         )
         logger.info(f"Centralized GROQ LLM {llm_name} initialized successfully.")
 
-    def generate_summary(
-        self, processor: Type[Processor], content, prompt: str
+    def generate_response(
+        self, context, prompt: str
     ) -> dict:
-        if not content == "None":
-            processed_data = processor.process_content(content)
-            prompt = prompt.format(context=processed_data["processed_text"])
-            logger.info("Generating summary using centralized LLM...")
+        prompt = prompt.format(context=context)
+        logger.info("Generating summary using centralized LLM...")
         summary = self.llm.invoke(prompt)
-        if not content == "None":
-            return {
-                "summary": summary.content,
-                "transcript": processed_data["processed_text"],
-                "embeddings": processed_data["embeddings"]
-            }
-        else:
-            return summary.content
+        
+        return summary.content
