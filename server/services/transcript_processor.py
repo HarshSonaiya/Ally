@@ -45,8 +45,7 @@ class TranscriptProcessor():
     
     def process_content(self, formatted_segments) -> dict:
         all_segment_embeddings = []
-        full_transcript = ""
-        enriched_segments = []
+        structured_transcript = []
 
         for segment in formatted_segments:
             start, end, speaker, text = segment['start'], segment['end'], segment['speaker'], segment['text']
@@ -64,8 +63,11 @@ class TranscriptProcessor():
                     "embedding": embeddings[idx]
                 })
 
-            enriched_segments.append(f"{speaker}: {text}")
-        
-        full_transcript = " ".join(enriched_segments)
-        return {"processed_text": full_transcript, "embeddings": all_segment_embeddings}
+            structured_transcript.append(f"[{start} - {end}] {speaker}: {text}")
 
+        transcript_string = "\n".join(structured_transcript)
+
+        return {
+            "transcript": transcript_string,
+            "embeddings": all_segment_embeddings
+        }

@@ -263,3 +263,20 @@ class ElasticsearchService:
             return response["_source"]
         except Exception as e:
             return {"error": f"Error retrieving data from {workspace_name}: {str(e)}"}
+
+    async def get_transcript(self, workspace_id: str):
+        """Fetches the transcript from the specified workspace collection in Elasticsearch."""
+        try:
+            response = self.es_client.search(
+                index=workspace_id,
+                body={"query": {"match_all": {}}},
+                size=1  
+            )
+            logger.info(response)
+            hits = response.get("hits", {}).get("hits", [])
+            if hits:
+                return hits[0]["_source"]
+            return None
+        except Exception as e:
+            logger.error(f"Error retrieving transcript: {str(e)}")
+            return None

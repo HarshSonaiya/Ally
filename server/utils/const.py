@@ -12,21 +12,18 @@ CLASSIFY_PROMPT = """
   or essential information, the user query to be searched for and classify the user queries into one of the following categories:
   1. General Query
   2. Audio Files Related Query
-  3. PDF file related Query
-  4. News Explain Query
-  5. Unknown Query
+  3. News Explain Query
+  4. Unknown Query
 
   1. Audio Files Related Query: The user is asking a question related to the audio files previously uploaded by the user, 
   of requesting a summary of a brief of discussions in a particular time range.
 
-  2. PDF file reated Query: The user is asking a question regarding the contents of the PDF files previously uploaded by the user,
-  these can be anything like summary of a section of the pdf or asking for a brief of the entire pdf, etc.
+  2. News Explainer Query: The user is asking a question realted to some news articles they want you to search and explain to them.
 
-  3. News Explainer Query: The user is asking a question realted to some news articles they want you to search and explain to them.
+  3. General Query: The queries that do not fall into any of the above categories but are completely vague.
 
-  4. General Query: The queries that do not fall into any of the above categories but are completely vague.
-
-  5. Unkown Query: The user queries/ questions that are not understandable or what the question is, is not at all clear.
+  4. Unkown Query: The user queries/ questions that are not understandable or what the question is, is not at all clear.
+  
   Do not give any additional indormation just extract query, classify the query and provide the extracted keywords or time stamps.
   THE USER QUERY: {context}
 

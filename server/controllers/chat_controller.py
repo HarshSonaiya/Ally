@@ -8,10 +8,7 @@ from utils.const import CLASSIFY_PROMPT
 from langchain_core.output_parsers.pydantic import PydanticOutputParser
 from models.pydantic_models import ClassifyQuery
 from langchain.prompts import PromptTemplate
-from newsapi import NewsApiClient
-from config import settings
-from utils.const import NEWS_SUMMARY_PROMPT
-from services import ElasticsearchService, FileProcessingService
+from services import ElasticsearchService
 from utils.const import SUMMARY_PROMPT
 
 logging.basicConfig(level=logging.INFO)
@@ -31,7 +28,6 @@ class ChatController:
     def __init__(self, mongo_client, es_client):
         self.search_service = WebSearch()
         self.summarization_service = SummarizationService()
-        self.newsapi = NewsApiClient(api_key=settings.NEWSAPI_KEY)
         self.es_service = ElasticsearchService(es_client)
 
     async def web_search(self, request: WebSearchRequest):
@@ -50,7 +46,7 @@ class ChatController:
             raise HTTPException(
                 status_code=500, detail=f"Error creating workspace: {e}"
             )
-    
+
     async def process_query(self, request: Request, query_request: AnswerQuery):
         """
         Classifies the user query into a category like:
@@ -71,12 +67,14 @@ class ChatController:
                 request.state.user_id, query_request.workspace_name
             )
             if response.category == "News Explain Query":
-                return self.fetch_news_articles(
-                    response.phrases, query_request.query
-                )
+                summary = self.summarization_service.fetch_news_articles(response.query)
+                if summary:
+                    return send_response(200, "News processed successfully.", {"summary": summary})
+                else:
+                    return send_response(200, "No relevant news found.", "None")
 
             elif response.category == "Audio Files Related Query":
-                pass
+                return await self.handle_audio_query(workspace_id, response)
 
             else:
                 response = {
@@ -93,7 +91,7 @@ class ChatController:
     def classify_query(self, query: str):
         """Classifies the query using a prompt-based LLM model."""
         output_parser = PydanticOutputParser(pydantic_object=ClassifyQuery)
-        output_format = output_parser.get_format_instructions()  
+        output_format = output_parser.get_format_instructions()
 
         prompt = PromptTemplate(
             template=CLASSIFY_PROMPT,
@@ -102,35 +100,47 @@ class ChatController:
         )
 
         formatted_prompt = prompt.format_prompt(context=query)
-        results = self.summarization_service.generate_summary(
-            "None", "None", formatted_prompt.to_string()
+        results = self.summarization_service.generate_response(
+            formatted_prompt.text
         )
 
         return output_parser.parse(results)
 
-    def fetch_news_articles(self, phrases: list, query: str):
-        """Retrieves relevant news articles based on extracted key phrases."""
-        unique_articles = {}
-        for phrase in phrases:
-            articles = self.newsapi.get_everything(
-                q=phrase, language="en", sort_by="relevancy", page=1
-            )
-            if articles.get("status") == "ok":
-                for article in articles["articles"][:5]:
-                    if article["url"] not in unique_articles:
-                        unique_articles[article["url"]] = article
+    async def handle_audio_query(self, workspace_id: str, classified_query: ClassifyQuery):
+        """
+        Processes audio-related queries by retrieving the transcript from Elasticsearch,
+        constructing a prompt based on extracted keywords and timestamps, and summarizing the response.
+        """
 
-        if not unique_articles:
-            return send_response(200, "No relevant news found.", "None")
+        try:
+            logger.info(f"Fetching transcript from workspace: {workspace_id}")
 
-        context = "\n\n".join(
-            [
-                f"Title: {a['title']}\nDescription: {a['description']}\nURL: {a['url']}"
-                for a in unique_articles.values()
-            ]
-        )
-        summary = self.summarization_service.generate_summary(
-            "None", "None", NEWS_SUMMARY_PROMPT.format(query=query, context=context)
-        )
-        logger.info(summary)
-        return send_response(200, "News processed successfully.", {"summary": summary})
+            # Query Elasticsearch to get the transcript
+            transcript_data = await self.es_service.get_transcript(workspace_id)
+            if not transcript_data:
+                return send_response(200, "No transcript found for this workspace.", "None")
+
+            transcript = transcript_data.get("transcript", "")
+            logger.info(transcript)
+
+            # Build the context using transcript and extracted query details
+            context = f"Transcript:\n{transcript}\n\nUser Query: {classified_query.query}"
+
+            if classified_query.start_timestamp and classified_query.end_timestamp:
+                context += f"\nTime stamps are in seconds in context and from user query as well, focus on the segment between {classified_query.start_timestamp} and {classified_query.end_timestamp}."
+
+            elif classified_query.keywords:
+                keyword_str = ", ".join(classified_query.keywords)
+                context += f"\nFocus on sections related to these keywords: {keyword_str}."
+
+            # Format the prompt
+            prompt = SUMMARY_PROMPT.format(context=context, query=classified_query.query)
+
+            logger.info("Generating response using SummarizationService.")
+            response = self.summarization_service.generate_response(prompt)
+
+            return send_response(200, "Audio query processed successfully.", {"summary": response})
+
+        except Exception as e:
+            logger.error(f"Error processing audio query: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error processing audio query: {str(e)}")
