@@ -38,6 +38,10 @@ export default function MainSection({ hidden, setHidden }) {
 
   async function submitNewMessage(isWebSearch) {
 
+    if (!currentProject) {
+      toast.error("Please select a project to continue");
+    }
+
     const trimmedMessage = newMessage.trim();
     if (!trimmedMessage || isLoading) return;
 

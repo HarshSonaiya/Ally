@@ -102,6 +102,10 @@ const response = await ally.analyze({
   }
 
   function handleNavigation(path) {
+    if (path === "/playground") {
+      navigate(path);
+      return;
+    }
     if (auth) {
       navigate(path);
     } else {

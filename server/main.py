@@ -87,7 +87,7 @@ async def validate_access_token(request: Request, call_next):
         "/favicon.ico",
         "/openapi.json",
         "/refresh-token",
-        "/plyground/query",
+        "/playground/query",
     ]
 
     # Check DB availability
