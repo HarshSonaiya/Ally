@@ -2,6 +2,7 @@ from config.settings import settings
 from ssl import create_default_context
 from email.mime.text import MIMEText
 from smtplib import SMTP
+import markdown 
 
 import logging
 
@@ -10,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 def send_email(file_name: str, summary: str):
     try:
+        summary_html = markdown.markdown(summary)
+
         # HTML email template
         email_content = f"""
             <html>
@@ -18,7 +21,7 @@ def send_email(file_name: str, summary: str):
                     <p>I hope this email finds you well.</p>
                     <p>Below is the summary of the file {file_name}:</p>
                     <blockquote style="border-left: 3px solid #ccc; padding-left: 10px; margin-left: 20px;">
-                    <p>{summary}</p>
+                    <p>{summary_html}</p>
                     </blockquote>
                     <p>Thank you for your time and participation.</p>
                     <br>
