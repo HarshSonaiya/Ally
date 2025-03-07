@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 
 class GoogleAuthRequest(BaseModel):
@@ -60,3 +60,9 @@ class RemoveFileRequest(BaseModel):
 class AnswerQuery(BaseModel):
     workspace_name: str
     query:str
+
+class PlaygroundQueryRequest(BaseModel):
+    model_name: str = Field(..., description="Name of the Response generation model.")
+    query_data: Dict[str, str] = Field(..., description="Contains either 'user': query or 'assistant': query")
+    max_tokens: Optional[int] = Field(512, description="Maximum token limit for LLM response.")
+    temperature: Optional[float] = Field(0.7, description="Controls randomness (higher is more random).")

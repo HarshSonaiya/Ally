@@ -32,6 +32,7 @@ def get_routers(mongo_client, es_client):
     chat_controller = ChatController(mongo_client, es_client)
     query_router.post("/chat/web-search")(chat_controller.web_search)
     query_router.post("/chat/query")(chat_controller.process_query)
+    query_router.post("/playground/query")(chat_controller.process_playground_query)
 
     # Return the routers
     return [auth_router, workspace_router, query_router]
