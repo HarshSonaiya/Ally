@@ -65,9 +65,7 @@ PLAYGROUND_PROMPT = """
         1. Generate **3 similar queries** that a user might ask related to: "{user_query}".
         2. Provide **detailed answers** for these similar queries.
         3. Use the generated responses as context to **answer the original user query** comprehensively.
-      
         
-        - Response Format:
-          <Answer to the original user query and send only the final response as the response of the LLM. Answer in Markdown only.>
-
+        Output format (Answer in markdwon Only. ):
+          <Final Response> 
         """

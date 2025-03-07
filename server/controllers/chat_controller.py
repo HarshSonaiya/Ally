@@ -71,7 +71,8 @@ class ChatController:
                 summary = self.summarization_service.fetch_news_articles(response.query)
                 if summary:
                     return send_response(
-                        200, "News processed successfully.", summary)
+                        200, "News processed successfully.", summary
+                    )
                 else:
                     return send_response(200, "No relevant news found.", "None")
 
@@ -81,11 +82,9 @@ class ChatController:
             elif response.category == "General Query":
                 prompt = PLAYGROUND_PROMPT.format(user_query=query_request.query)
                 summary = self.summarization_service.generate_response(prompt)
-                
-                logger.info(f"generated summary: {summary}")
-                
                 return send_response(
-                        200, "Response generated successfully.", summary)
+                        200, "Response generated successfully.", summary
+                    )
             else:
                 response = {
                     "message": "I could not understand the query. Can you please rephrase it and be more specific."
@@ -192,7 +191,7 @@ class ChatController:
             response = self.summarization_service.generate_response(prompt)
 
             return send_response(
-                200, "Audio query processed successfully.", {"summary": response}
+                200, "Audio query processed successfully.", response
             )
 
         except Exception as e:
