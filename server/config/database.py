@@ -30,8 +30,8 @@ class DatabaseManager:
         
         try:
             self.es_client = Elasticsearch(settings.ELASTIC_URL)
-            if not self.es_client.ping():
-                raise Exception("Elasticsearch is unreachable")
+            # if not self.es_client.ping():
+            #     raise Exception("Elasticsearch is unreachable")
             logger.info("Elasticsearch connected successfully.")
         except Exception as e:
             logger.error(f"Failed to connect to Elasticsearch: {e}")

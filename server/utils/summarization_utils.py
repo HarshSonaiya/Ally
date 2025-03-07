@@ -61,9 +61,9 @@ class SummarizationService:
     def generate_response(
         self, prompt: str
     ) -> dict:
-        logger.info(f"Generating summary using centralized LLM... {prompt}")
+        logger.info(f"Generating summary using centralized LLM...")
         logger.info(prompt)
         summary = self.llm.invoke(prompt)
-        logger.info(f"LLM raw response: {summary}")
+        logger.info(f"LLM raw response generated")
         
         return summary.content

@@ -1,4 +1,4 @@
-import { useCallback, useContext, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import useAutosize from '../../hooks/useAutosize';
 import { GlobeIcon, PaperclipIcon, SendIcon } from '../icons';
 import Button from '../ui/Button';
@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 import { X, FileText } from 'lucide-react';
 import { Popover, PopoverRoot, PopoverTrigger } from '../ui/Popover';
 import { ChatContext } from '../../context/ChatContext.jsx';
-import { uploadFiles } from '../../Api/handlers/chatHandler.js';
+import { listFiles, uploadFiles } from '../../Api/handlers/chatHandler.js';
 import { toast } from 'react-toastify';
 
 function ChatInput({ newMessage, setNewMessage, messages, isLoading, submitNewMessage }) {
@@ -105,11 +105,11 @@ ChatInput.propTypes = {
 };
 
 function FileUpload({ fileRef }) {
-    const [files, setFiles] = useState([]);
+    const [inputFiles, setInputFiles] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
     const [error, setError] = useState('');
 
-    const { currentProject } = useContext(ChatContext);
+    const { currentProject, files, setFiles } = useContext(ChatContext);
 
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -124,27 +124,23 @@ function FileUpload({ fileRef }) {
             return;
         }
 
-        setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
+        setInputFiles(prevFiles => [...prevFiles, ...selectedFiles]);
     }, []);
 
     const removeFile = useCallback((index) => {
-        setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+        setInputFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
     }, []);
 
     const onFileSelect = useCallback((files) => {
         fileRef.current = files;
     }, []);
 
-    console.log("Files: ", files);
-
-
     const handleSubmit = useCallback(async () => {
-        onFileSelect(files);
+        onFileSelect(inputFiles);
         setIsOpen(false);
-        setFiles([]);
-        const response = await uploadFiles(files, currentProject.value);
+        setInputFiles([]);
+        const response = await uploadFiles(inputFiles, currentProject.value);
         console.log("response: ", response);
-        alert(response.data)
 
         if (response) {
             toast.success('Files uploaded successfully. Summary has been send to your email');
@@ -152,7 +148,14 @@ function FileUpload({ fileRef }) {
             toast.error('Failed to upload files');
         }
 
-    }, [files, onFileSelect]);
+        const updatedFiles = await listFiles(currentProject.value);
+
+
+        if (updatedFiles.length > 0) {
+            setFiles(response);
+        }
+
+    }, [inputFiles, onFileSelect]);
 
     return (
         <PopoverRoot className="file-upload__popover-root">
@@ -212,16 +215,16 @@ function FileUpload({ fileRef }) {
                                 </label>
                             </div>
 
-                            {files.length > 0 && (
+                            {inputFiles.length > 0 && (
                                 <div className="file-upload__file-list">
-                                    {files.map((file, index) => (
+                                    {inputFiles.map((inputFile, index) => (
                                         <div
                                             key={index}
                                             className="file-upload__file-item"
                                         >
                                             <div className="file-upload__file-info">
                                                 <FileText className="file-upload__icon" />
-                                                <span className="file-upload__file-name">{file.name}</span>
+                                                <span className="file-upload__file-name">{inputFile.name}</span>
                                             </div>
                                             <Button
                                                 variant="ghost"
@@ -249,7 +252,7 @@ function FileUpload({ fileRef }) {
                         </Button>
                         <Button
                             onClick={handleSubmit}
-                            disabled={files.length === 0}
+                            disabled={inputFiles.length === 0}
                             size='sm'
                         // className="file-upload__button-upload"
                         >

@@ -118,31 +118,28 @@ export default function MainSection({ hidden, setHidden }) {
 
   // TODO: replace with actual API call
 
-  useEffect(() => {
-    async function fetchProjects() {
-      const response = await getProjects();
+  async function fetchProjects() {
+    const response = await getProjects();
 
-      const projectOptions = response.map((project) => ({
-        value: project,
-        label: project,
-      }));
+    const projectOptions = response.map((project) => ({
+      value: project,
+      label: project,
+    }));
 
-      setProjects(projectOptions);
+    setProjects(projectOptions);
 
-      if (projectOptions.length > 0) {
-        const timer = setTimeout(
-          () => setCurrentProject(projectOptions[0]),
-          1000
-        );
+    if (projectOptions.length > 0) {
+      const timer = setTimeout(
+        () => setCurrentProject(projectOptions[0]),
+        1000
+      );
 
-        return () => clearTimeout(timer); // Cleanup function to clear timeout
-      }
-
-      toast.info("No projects found. Create a new project to get started!");
+      return () => clearTimeout(timer); // Cleanup function to clear timeout
     }
 
-    fetchProjects();
-  }, []);
+    toast.info("No projects found. Create a new project to get started!");
+  }
+
 
   async function handleCreateProject() {
     const response = await createProject({ workspace_name: projectName });
@@ -159,8 +156,13 @@ export default function MainSection({ hidden, setHidden }) {
       setProjectName("");
     }
 
+    fetchProjects();
     // console.log("Creating project...");
   }
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   return (
     <section className="main-section">
@@ -179,7 +181,8 @@ export default function MainSection({ hidden, setHidden }) {
           {
             <Select
               options={projects}
-              defaultValue={projects[0]}
+              // defaultValue={projects[0]}
+              value={currentProject}
               onChange={setCurrentProject}
               placeholder="Select Project"
               styles={{

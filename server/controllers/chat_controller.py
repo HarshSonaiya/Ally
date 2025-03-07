@@ -71,20 +71,21 @@ class ChatController:
                 summary = self.summarization_service.fetch_news_articles(response.query)
                 if summary:
                     return send_response(
-                        200, "News processed successfully.", {"summary": summary}
-                    )
+                        200, "News processed successfully.", summary)
                 else:
                     return send_response(200, "No relevant news found.", "None")
 
             elif response.category == "Audio Files Related Query":
                 return await self.handle_audio_query(workspace_id, response)
 
-            elif response.category == "Audio Files Related Query":
+            elif response.category == "General Query":
                 prompt = PLAYGROUND_PROMPT.format(user_query=query_request.query)
-                summary = await self.summarization_service.generate_response(prompt)
+                summary = self.summarization_service.generate_response(prompt)
+                
+                logger.info(f"generated summary: {summary}")
+                
                 return send_response(
-                        200, "Response generated successfully.", {"summary": summary}
-                    )
+                        200, "Response generated successfully.", summary)
             else:
                 response = {
                     "message": "I could not understand the query. Can you please rephrase it and be more specific."
