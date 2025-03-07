@@ -26,7 +26,7 @@ export default function Sidebar({ hidden, setHidden }) {
             toast.error('Failed to logout. You have been logged out automatically');
         }
 
-        if (response.status_code != 200) {
+        if (!response.success) {
             localStorage.removeItem('access_token');
             navigate('/');
             toast.error('Failed to logout. You have been logged out automatically');
@@ -143,7 +143,7 @@ export default function Sidebar({ hidden, setHidden }) {
                 </div>
             </div> */}
             <div className="sidebar__chat-list">
-                <div className="sidebar__chat-header">{"Recent Files"}</div>
+                <div className="sidebar__chat-header">{"Uploaded Files"}</div>
                 <div className="sidebar__chat-items">
                     {files?.length > 0 ?
                         files.map((file, index) => {
@@ -159,9 +159,9 @@ export default function Sidebar({ hidden, setHidden }) {
             </div>
             {/* </div> */}
             <div className="sidebar__footer">
+                <Button variant='ghost' size='sm' onClick={handleLogout} className="sidebar__footer-button">{"Logout"}</Button>
                 <Button variant='ghost' size='sm' className="sidebar__footer-button"><SettingsIcon />{"Settings"}</Button>
                 {/* <Button variant='ghost' size='sm' className="sidebar__footer-button"><HelpIcon />{"Help & FAQs"}</Button> */}
-                <Button variant='ghost' size='sm' onClick={handleLogout} className="sidebar__footer-button">{"Logout"}</Button>
             </div>
         </aside >
     )

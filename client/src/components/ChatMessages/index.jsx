@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import useAutoScroll from '../../hooks/useAutoScroll';
 import { CircleErrorIcon, CircleUserIcon, Spinner } from '../icons';
 import './chatMessages.css';
+import Markdown from 'react-markdown';
 
 function ChatMessages({ messages, isLoading }) {
     const scrollContentRef = useAutoScroll(isLoading);
@@ -33,7 +34,7 @@ function ChatMessages({ messages, isLoading }) {
                                     </div>
                                 ) : role === 'assistant' ? (
                                     (loading && !content) ? <Spinner color='#007bff' /> : <div className='assistant-message'>
-                                        {content}
+                                        <Markdown>{content}</Markdown>
                                     </div>
                                 ) : null
                             }
@@ -47,8 +48,9 @@ function ChatMessages({ messages, isLoading }) {
                         // </div>
                     ))}
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
 
     );
 }

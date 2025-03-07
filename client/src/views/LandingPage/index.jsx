@@ -101,6 +101,14 @@ const response = await ally.analyze({
     toast.success("Logged out successfully!");
   }
 
+  function handleNavigation(path) {
+    if (auth) {
+      navigate(path);
+    } else {
+      handleGoogleLogin();
+    }
+  }
+
   return (
     <div className="landing-page">
       {/* Header Section */}
@@ -153,10 +161,7 @@ const response = await ally.analyze({
             all in one place.
           </p>
           <div className="cta-buttons">
-            <Button size="lg">Start Chatting</Button>
-            <Button variant="outline" size="lg">
-              Try Demo
-            </Button>
+            <Button size="lg" onClick={() => handleNavigation('/chat')}>Start Chatting</Button>
           </div>
         </div>
         <div className="hero-right">
@@ -202,7 +207,7 @@ const response = await ally.analyze({
         <div className="content">
           <h2>Customize Your Experience</h2>
           <p>Build powerful AI-driven applications with our developer-friendly tools and APIs.</p>
-          <Button size="sm">Access Developer Portal</Button>
+          <Button onClick={() => handleNavigation('/playground')}>Access Playground</Button>
         </div>
         <div className="code-preview">
           <pre>

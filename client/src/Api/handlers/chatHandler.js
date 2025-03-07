@@ -128,6 +128,25 @@ export async function chatQuery(query) {
   }
 }
 
+export async function playgroundQuery(query) {
+  try {
+    const response = await axiosRequest({
+      method: "POST",
+      endpoint: "/playground/query",
+      body: query,
+    });
+
+    return response || null;
+  } catch (error) {
+    if (error?.response) {
+      return error.response.data;
+    } else {
+      console.error("Playground Query Error:", error.message);
+    }
+    return error;
+  }
+}
+
 export default {
   createProject,
   getProjects,
@@ -135,4 +154,5 @@ export default {
   listFiles,
   webSearchQuery,
   chatQuery,
+  playgroundQuery,
 };

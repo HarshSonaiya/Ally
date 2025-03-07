@@ -37,34 +37,28 @@
   max-width: 100%;
   margin: 0 auto;
   color: white;
-  scrollbar-width: thin;
-  scrollbar-color: #4a4a4a #1a1a1a;
   padding-right: 20px;
+}
+
+.pg-center-message {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+}
+
+.pg-center-message h1 {
+  font-size: 2.5rem;
+  background: linear-gradient(90deg, #007bff, #00bcd4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .chat-main.sidebar-closed .chat-messages {
   padding-right: 0;
-}
-
-/* Webkit scrollbar styling */
-.chat-messages::-webkit-scrollbar {
-  width: 8px;
-  position: absolute;
-  right: 0;
-}
-
-.chat-messages::-webkit-scrollbar-track {
-  background: #1a1a1a;
-  border-radius: 0;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-  background: #4a4a4a;
-  border-radius: 0;
-}
-
-.chat-messages::-webkit-scrollbar-thumb:hover {
-  background: #5a5a5a;
 }
 
 .pg-message {
@@ -119,12 +113,13 @@
   align-items: center;
   font-size: 0.8rem;
   color: #888;
+  justify-content: flex-end;
   /* margin-bottom: 2px; */
 }
 
 .message-role {
   font-weight: 500;
-  color: #4a9eff;
+  color: #010101;
   margin-right: 10px;
 }
 
@@ -169,31 +164,57 @@
 }
 
 .chat-main.sidebar-closed .input-container {
-  right: 40px;
+  /* right: 40px; */
+  width: 50rem;
 }
 
-.input-container textarea {
-  flex: 1;
-  background-color: #424242;
-  color: #ffffff;
+.pg-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background-color: transparent;
+  width: 100%;
+  z-index: 90;
+  transition: all 0.3s ease;
+  justify-content: flex-end;
+}
+
+.pg-input-container {
+  max-width: 50.625rem;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
   border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 1rem;
-  line-height: 1.5;
-  overflow: hidden;
-  transition: all 0.2s ease;
 }
 
-.input-container textarea:focus {
+.pg-input-container textarea {
+  width: 40rem;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-size: 1rem;
+  padding: 0.5rem;
+  max-height: 12.5rem;
+  transition: all 0.3s ease;
+}
+
+.pg-input-container textarea:focus {
   outline: none;
 }
 
-.input-container textarea::placeholder {
+.pg-input-container textarea::placeholder {
   color: #888;
 }
-.send-button {
+.pg-send-button {
   height: 45px;
+  margin-left: 1rem;
   padding: 12px;
   width: 70px;
   font-size: 1rem;

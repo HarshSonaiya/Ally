@@ -3,6 +3,8 @@ import "./PlaygroundPage.css";
 import { ChevronRight, ChevronLeft, CornerDownLeft } from "lucide-react";
 import Button from "../../components/ui/Button";
 import Select from "react-select";
+import { playgroundQuery } from "../../Api/handlers/chatHandler";
+import Markdown from "react-markdown";
 
 const models = [
   { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B Instant" },
@@ -13,7 +15,7 @@ const models = [
 
 const PlaygroundPage = () => {
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+  const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentModel, setCurrentModel] = useState(models[0]);
@@ -26,7 +28,7 @@ const PlaygroundPage = () => {
   });
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
-  const [currentMode, setCurrentMode] = useState("User");
+  const [currentMode, setCurrentMode] = useState("user");
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,66 +52,116 @@ const PlaygroundPage = () => {
 
   useEffect(() => {
     adjustTextareaHeight();
-  }, [input]);
+  }, [inputMessage]);
 
   const handleModeToggle = () => {
-    setCurrentMode((prev) => (prev === "User" ? "Assistant" : "User"));
-    setInput(currentMode === "User" ? "" : "");
+    setCurrentMode((prev) => (prev === "user" ? "assistant" : "user"));
+    setInputMessage(currentMode === "user" ? "" : "");
   };
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    const trimmedMessage = inputMessage.trim();
+    if (!trimmedMessage) return;
 
     const userMessage = {
-      role: "user",
-      content: input,
+      role: currentMode,
+      type: "user",
+      content: inputMessage,
       timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    setInputMessage("");
     setIsStreaming(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    const query = {
+      model_name: currentModel.value,
+      query_data: {
+        [currentMode]: trimmedMessage,
+      },
+      max_tokens: settings.maxTokens,
+      temperature: settings.temperature,
+    }
+
+    console.log("query: ", query);
+
+
+    const response = await playgroundQuery(query);
+
+    console.log("response: ", response);
+
+    if (response.success) {
       const aiMessage = {
         role: "assistant",
-        content:
-          "This is a simulated response. Replace with actual Groq API integration. THis is me whate i need to do is just a classsification ins the situaikon wiehtou aannhy tThis is a simulated response. Replace with actual Groq API integration. THis is me whate i need to do is just a classsification ins the situaikon wiehtou aannhy t",
+        type: "assistant",
+        content: response.data,
         timestamp: new Date().toISOString(),
-        metrics: {
-          timeToFirstToken: "23ms",
-          totalTime: "1.2s",
-          tokensGenerated: 42,
-        },
-      };
+      }
       setMessages((prev) => [...prev, aiMessage]);
       setIsStreaming(false);
-    }, 1000);
+    } else {
+      console.error("Error sending message: ", response.error);
+
+      const aiMessage = {
+        role: "assistant",
+        type: "assistant",
+        content: "Error sending message. Please try again.",
+        timestamp: new Date().toISOString(),
+      }
+      setMessages((prev) => [...prev, aiMessage]);
+
+      setIsStreaming(false);
+    }
+
+
+    // Simulate AI response
+    // setTimeout(() => {
+    //   const aiMessage = {
+    //     role: "assistant",
+    //     type: "assistant",
+    //     content:
+    //       "This is a simulated response. Replace with actual Groq API integration. THis is me whate i need to do is just a classsification ins the situaikon wiehtou aannhy tThis is a simulated response. Replace with actual Groq API integration. THis is me whate i need to do is just a classsification ins the situaikon wiehtou aannhy t",
+    //     timestamp: new Date().toISOString(),
+    //   };
+    //   setMessages((prev) => [...prev, aiMessage]);
+    //   setIsStreaming(false);
+    // }, 1000);
   };
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey && !isStreaming) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
 
   return (
     <div className="playground-container">
       <main className={`chat-main ${!isSidebarOpen ? "sidebar-closed" : ""}`}>
         <div className="chat-messages">
-          {messages.map((message, index) => (
-            <div key={index} className={`pg-message ${message.role}`}>
-              {message.role === "assistant" && (
+          {messages.length > 0 ? messages.map((message, index) => (
+            <div key={index} className={`pg-message ${message.type}`}>
+              <div className="message-content"><Markdown>{message.content}</Markdown></div>
+              {message.type === "user" && (
                 <div className="message-header">
                   <span className="message-role">{message.role}</span>
                   <span className="message-time">{new Date(message.timestamp).toLocaleTimeString()}</span>
                 </div>
               )}
-              <div className="message-content">{message.content}</div>
-              {message.metrics && (
-                <div className="message-metrics">
-                  <span>First token: {message.metrics.timeToFirstToken}</span>
-                  <span>Total time: {message.metrics.totalTime}</span>
-                  <span>Tokens: {message.metrics.tokensGenerated}</span>
-                </div>
-              )}
+              {/* {message.metrics && (
+                  <div className="message-metrics">
+                    <span>First token: {message.metrics.timeToFirstToken}</span>
+                    <span>Total time: {message.metrics.totalTime}</span>
+                    <span>Tokens: {message.metrics.tokensGenerated}</span>
+                  </div>
+                )} */}
             </div>
-          ))}
+          )) : (
+            <div className="pg-center-message">
+              <h1>{"Welcome, to the Playground"}</h1>
+              <p className="subtitle">{"play around settings to get the desired response."}</p>
+            </div>
+          )}
           {isStreaming && (
             <div className="message assistant streaming">
               <div className="typing-indicator">
@@ -123,14 +175,14 @@ const PlaygroundPage = () => {
         </div>
 
         <div className="input-container">
-          <button onClick={handleModeToggle} className="mode-toggle-button">
+          <Button variant="outline" onClick={handleModeToggle}>
             {currentMode}
-          </button>
-          <textarea
+          </Button>
+          {/* <textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => {
-              setInput(e.target.value);
+              setInputMessage(e.target.value);
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -140,10 +192,23 @@ const PlaygroundPage = () => {
             }}
             placeholder="User Message..."
             rows={1}
-          />
-          <button onClick={handleSend} disabled={isStreaming || !input.trim()} className="send-button">
-            Send <CornerDownLeft />
-          </button>
+          /> */}
+          <div className="pg-input-wrapper">
+            <div className="pg-input-container">
+              <textarea
+                // className="chat-input"
+                placeholder="Send a message..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                rows={1}
+                ref={textareaRef}
+                onKeyDown={handleKeyDown}
+              />
+            </div>
+          </div>
+          <Button onClick={handleSend} disabled={isStreaming || !inputMessage.trim()}>
+            Send <span style={{ marginLeft: "0.5rem", marginTop: "0.2rem" }}><CornerDownLeft size={15} /></span>
+          </Button>
         </div>
         {/* <div className={`chat-input-wrapper ${!messages.length ? "center-position" : ""}`}>
           <div className="chat-input-container">
