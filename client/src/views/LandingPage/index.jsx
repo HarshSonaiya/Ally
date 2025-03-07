@@ -127,10 +127,10 @@ const response = await ally.analyze({
               <a href="#features">Features</a>
             </li>
             <li>
-              <a href="/playground">Playground</a>
+              <a onClick={() => handleNavigation("/chat")}>Developers</a>
             </li>
             <li>
-              <a href="#developer">Developer Portal</a>
+              <a onClick={() => handleNavigation("/playground")}>Playground</a>
             </li>
           </ul>
           <div className="auth-buttons">
@@ -165,7 +165,9 @@ const response = await ally.analyze({
             all in one place.
           </p>
           <div className="cta-buttons">
-            <Button size="lg" onClick={() => handleNavigation('/chat')}>Start Chatting</Button>
+            <Button size="lg" onClick={() => handleNavigation("/chat")}>
+              Start Chatting
+            </Button>
           </div>
         </div>
         <div className="hero-right">
@@ -211,7 +213,7 @@ const response = await ally.analyze({
         <div className="content">
           <h2>Customize Your Experience</h2>
           <p>Build powerful AI-driven applications with our developer-friendly tools and APIs.</p>
-          <Button onClick={() => handleNavigation('/playground')}>Access Playground</Button>
+          <Button onClick={() => handleNavigation("/playground")}>Access Playground</Button>
         </div>
         <div className="code-preview">
           <pre>

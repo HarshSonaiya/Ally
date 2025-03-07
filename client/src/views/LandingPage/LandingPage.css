@@ -37,6 +37,7 @@ nav a {
   text-decoration: none;
   color: #1a1f2c;
   font-weight: 500;
+  cursor: pointer;
 }
 
 .auth-buttons {
@@ -372,6 +373,7 @@ footer {
     padding: 1rem;
     width: 100%;
     text-align: left;
+    cursor: pointer;
   }
 
   .auth-buttons {

@@ -74,6 +74,7 @@
   background-color: #f0f0f0;
   color: #000000;
   border: 1px solid #ccc;
+  /* margin-right: 25px; */
 }
 
 .chat-main.sidebar-closed .message {
@@ -98,6 +99,13 @@
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 10px;
+  /* margin-right: 1.2rem; */
+  /* padding-right: 25px; */
+}
+
+.pg-message.user.sidebar-closed,
+.chat-main.sidebar-closed .pg-message.user {
+  margin-right: 35px; /* Adjust this value as needed */
 }
 
 .pg-message.assistant {
@@ -147,25 +155,34 @@
   position: fixed;
   bottom: 0;
   left: 0;
-  right: 320px;
-  margin: 0 auto;
-  margin-bottom: 20px;
-  padding: 10px;
-  /* background-color: #2c2c2c; */
-  border-radius: 8px;
+  /* right: 320px; */
+  margin-left: 1.3rem;
+  /* margin-bottom: 20px; */
+  /* padding: 10px; */
+  background-color: #f9f9f9;
+  /* border-radius: 8px; */
   display: flex;
   z-index: 25;
   transition: all 0.3s ease;
   width: 100%;
-  max-width: 800px;
+  max-width: 1030px;
   transform: none;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .chat-main.sidebar-closed .input-container {
-  /* right: 40px; */
-  width: 50rem;
+  right: 0;
+  max-width: 93.7%;
+  width: 100%;
+}
+
+.pg-input-wrapper.sidebar-closed {
+  max-width: 90%;
+  width: 90%;
+  margin-left: 0;
+  padding: 0;
 }
 
 .pg-input-wrapper {
@@ -180,7 +197,7 @@
 }
 
 .pg-input-container {
-  max-width: 50.625rem;
+  max-width: 80.625rem;
   width: 100%;
   margin: 0 auto;
   display: flex;
@@ -195,7 +212,7 @@
 }
 
 .pg-input-container textarea {
-  width: 40rem;
+  width: 100%;
   border: none;
   background: transparent;
   resize: none;
@@ -203,6 +220,11 @@
   padding: 0.5rem;
   max-height: 12.5rem;
   transition: all 0.3s ease;
+}
+
+.chat-main.sidebar-closed .pg-input-container textarea {
+  width: 100%; /* Full width */
+  max-width: 100%; /* Ensure it doesn't exceed container */
 }
 
 .pg-input-container textarea:focus {
