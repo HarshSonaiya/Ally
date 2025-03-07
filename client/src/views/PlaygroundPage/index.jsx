@@ -1,14 +1,24 @@
 import { useState, useRef, useEffect } from "react";
 import "./PlaygroundPage.css";
 import { ChevronRight, ChevronLeft, CornerDownLeft } from "lucide-react";
+import Button from "../../components/ui/Button";
+import Select from "react-select";
+
+const models = [
+  { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B Instant" },
+  { value: "llama-3.3-70b-specdec", label: "Llama 3.3 70B SpecDec" },
+  { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B Versatile" },
+  { value: "llama-3.2-3b-preview", label: "Llama 3.2 3B Preview" },
+];
 
 const PlaygroundPage = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [currentModel, setCurrentModel] = useState(models[0]);
   const [settings, setSettings] = useState({
-    model: "mixtral-8x7b",
+    model: currentModel,
     temperature: 0.7,
     maxTokens: 5000,
     topP: 1,
@@ -17,11 +27,6 @@ const PlaygroundPage = () => {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const [currentMode, setCurrentMode] = useState("User");
-
-  const models = [
-    { value: "mixtral-8x7b", label: "Mixtral 8x7B" },
-    { value: "llama2-70b", label: "Llama 2 70B" },
-  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -88,7 +93,7 @@ const PlaygroundPage = () => {
       <main className={`chat-main ${!isSidebarOpen ? "sidebar-closed" : ""}`}>
         <div className="chat-messages">
           {messages.map((message, index) => (
-            <div key={index} className={`message ${message.role}`}>
+            <div key={index} className={`pg-message ${message.role}`}>
               {message.role === "assistant" && (
                 <div className="message-header">
                   <span className="message-role">{message.role}</span>
@@ -140,26 +145,61 @@ const PlaygroundPage = () => {
             Send <CornerDownLeft />
           </button>
         </div>
+        {/* <div className={`chat-input-wrapper ${!messages.length ? "center-position" : ""}`}>
+          <div className="chat-input-container">
+            <textarea
+              className="chat-input"
+              placeholder="Send a message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              rows={1}
+              ref={textareaRef}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+        </div> */}
       </main>
 
       <aside className={`settings-sidebar ${!isSidebarOpen ? "closed" : ""}`}>
         <div className="sidebar-header">
           <h2>Model Settings</h2>
-          <button className="toggle-button" onClick={toggleSidebar}>
+          <Button variant="ghost" size="icon" className="toggle-button" onClick={toggleSidebar}>
             <ChevronRight size={20} />
-          </button>
+          </Button>
         </div>
 
         <div className="settings-content">
           <div className="setting-group">
             <label>Model</label>
-            <select value={settings.model} onChange={(e) => setSettings({ ...settings, model: e.target.value })}>
+            {/* <select value={settings.model} onChange={(e) => setSettings({ ...settings, model: e.target.value })}>
               {models.map((model) => (
                 <option key={model.value} value={model.value}>
                   {model.label}
                 </option>
               ))}
-            </select>
+            </select> */}
+            <Select
+              options={models}
+              defaultValue={models[0]}
+              onChange={setCurrentModel}
+              placeholder="Select Project"
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  width: '100%',
+                  height: 30,
+                  borderRadius: 5,
+                  border: "1px solid #E5E7EB",
+                  fontSize: 16,
+                  color: "#4B5563",
+                  backgroundColor: "#F3F4F6",
+                  boxShadow: "none",
+                  "&:hover": {
+                    border: "1px solid #E5E7EB",
+                  },
+                }),
+              }}
+            />
           </div>
 
           <div className="setting-group">
@@ -194,9 +234,9 @@ const PlaygroundPage = () => {
       </aside>
 
       <div className="vertical-container">
-        <button className="toggle-button" onClick={toggleSidebar}>
+        <Button variant="ghost" size="sm" className="toggle-button" onClick={toggleSidebar}>
           <ChevronLeft size={20} />
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -38,23 +38,36 @@ export default function MainSection({ hidden, setHidden }) {
 
   async function submitNewMessage(isWebSearch) {
 
+    const trimmedMessage = newMessage.trim();
+    if (!trimmedMessage || isLoading) return;
+
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: trimmedMessage },
+      { role: "assistant", content: "", sources: [], loading: true },
+    ]);
+    setNewMessage("");
+
     if (isWebSearch) {
-      const trimmedMessage = newMessage.trim();
-      if (!trimmedMessage || isLoading) return;
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "user", content: trimmedMessage },
-        { role: "assistant", content: "", sources: [], loading: true },
-      ]);
-      setNewMessage("");
+      const response = await webSearchQuery(trimmedMessage);
 
-      const response = await webSearchQuery(newMessage);
-
-      if (response.status_code == 200) {
+      if (response) {
         setMessages((draft) => {
           const updatedMessages = [...draft];
           updatedMessages[updatedMessages.length - 1].content = response.data.result;
+          return updatedMessages;
+        });
+
+        setMessages((draft) => {
+          const updatedMessages = [...draft];
+          updatedMessages[updatedMessages.length - 1].loading = false;
+          return updatedMessages;
+        })
+      } else {
+        setMessages((draft) => {
+          const updatedMessages = [...draft];
+          updatedMessages[updatedMessages.length - 1].content = "Error fetching search results";
           return updatedMessages;
         });
 
@@ -67,22 +80,29 @@ export default function MainSection({ hidden, setHidden }) {
       return;
     }
 
-    const trimmedMessage = newMessage.trim();
-    if (!trimmedMessage || isLoading) return;
+    const query = {
+      workspace_name: currentProject.value,
+      query: trimmedMessage,
+    }
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: trimmedMessage },
-      { role: "assistant", content: "", sources: [], loading: true },
-    ]);
-    setNewMessage("");
+    const response = await chatQuery(query);
 
-    const response = await chatQuery(newMessage);
-
-    if (response.status_code == 200) {
+    if (response) {
       setMessages((draft) => {
         const updatedMessages = [...draft];
-        updatedMessages[updatedMessages.length - 1].content = response.data.result;
+        updatedMessages[updatedMessages.length - 1].content = response.data;
+        return updatedMessages;
+      });
+
+      setMessages((draft) => {
+        const updatedMessages = [...draft];
+        updatedMessages[updatedMessages.length - 1].loading = false;
+        return updatedMessages;
+      })
+    } else {
+      setMessages((draft) => {
+        const updatedMessages = [...draft];
+        updatedMessages[updatedMessages.length - 1].content = "Error fetching response";
         return updatedMessages;
       });
 
@@ -92,6 +112,8 @@ export default function MainSection({ hidden, setHidden }) {
         return updatedMessages;
       })
     }
+
+    return;
   }
 
   // TODO: replace with actual API call

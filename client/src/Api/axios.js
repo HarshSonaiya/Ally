@@ -20,24 +20,22 @@ axiosInstance.interceptors.request.use(function accessTokenInterceptor(config) {
 });
 
 axiosInstance.interceptors.response.use(
-  (response) => {
-    console.log("Full response: ", response);
-    return response.data
-  },
+  (response) => response.data,
   function errorHandlingInterceptor(error) {
-    console.error(error)
+    console.error(error);
     if (axios.isCancel(error)) {
       console.error("Request canceled:", error.message);
       return Promise.reject(null); // Treat canceled requests differently if needed
     }
 
     if (error.response?.status === 401) {
-      // Clear stored tokens 
+      // Clear stored tokens
       localStorage.removeItem("access_token");
-      
+
       // Notify user about authentication failure
       const errorMessage =
-        error.response.data?.error || "Authentication failed. Please log in again.";
+        error.response.data?.error ||
+        "Authentication failed. Please log in again.";
 
       // Display the custom error message
       alert(errorMessage);

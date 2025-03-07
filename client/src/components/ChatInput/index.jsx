@@ -7,7 +7,8 @@ import PropTypes from 'prop-types';
 import { X, FileText } from 'lucide-react';
 import { Popover, PopoverRoot, PopoverTrigger } from '../ui/Popover';
 import { ChatContext } from '../../context/ChatContext.jsx';
-import { uploadFiles } from '../../Api/handlers/chatHandler.js'
+import { uploadFiles } from '../../Api/handlers/chatHandler.js';
+import { toast } from 'react-toastify';
 
 function ChatInput({ newMessage, setNewMessage, messages, isLoading, submitNewMessage }) {
 
@@ -144,6 +145,12 @@ function FileUpload({ fileRef }) {
         const response = await uploadFiles(files, currentProject.value);
         console.log("response: ", response);
         alert(response.data)
+
+        if (response) {
+            toast.success('Files uploaded successfully. Summary has been send to your email');
+        } else {
+            toast.error('Failed to upload files');
+        }
 
     }, [files, onFileSelect]);
 

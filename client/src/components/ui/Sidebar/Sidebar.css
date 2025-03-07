@@ -113,6 +113,11 @@
   color: #6a6c6e;
 }
 
+.file-err-msg {
+  font-size: 0.8rem;
+  color: #ef4444;
+}
+
 .sidebar__chat-items {
   width: 100%;
   display: flex;

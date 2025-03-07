@@ -153,7 +153,7 @@ export default function Sidebar({ hidden, setHidden }) {
                                     <Button variant='ghost' size='sm' className="sidebar__chat-item-button"><MoreIcon /></Button>
                                 </div>
                             )
-                        }) : null
+                        }) : <span className='file-err-msg'>No files found. Upload files to chat with them or use General chat.</span>
                     }
                 </div>
             </div>
@@ -163,7 +163,7 @@ export default function Sidebar({ hidden, setHidden }) {
                 {/* <Button variant='ghost' size='sm' className="sidebar__footer-button"><HelpIcon />{"Help & FAQs"}</Button> */}
                 <Button variant='ghost' size='sm' onClick={handleLogout} className="sidebar__footer-button">{"Logout"}</Button>
             </div>
-        </aside>
+        </aside >
     )
 }
 

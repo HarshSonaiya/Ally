@@ -114,7 +114,7 @@ export async function chatQuery(query) {
     const response = await axiosRequest({
       method: "POST",
       endpoint: "/chat/query",
-      body: { query },
+      body: query,
     });
 
     return response || null;
