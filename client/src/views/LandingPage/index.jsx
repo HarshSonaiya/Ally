@@ -1,21 +1,20 @@
-import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Button from '../../components/ui/Button';
-import { assets } from '../../assets/assets';
-import './LandingPage.css';
-import { Hamburger } from '../../components/icons';
-import { logout } from '../../Api/handlers/authHandler';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { exchangeAuthCode } from '../../Api/handlers/authHandler.js';
+import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import Button from "../../components/ui/Button";
+import { assets } from "../../assets/assets";
+import "./LandingPage.css";
+import { Hamburger } from "../../components/icons";
+import { logout } from "../../Api/handlers/authHandler";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { exchangeAuthCode } from "../../Api/handlers/authHandler.js";
 
 const Index = () => {
-
   const [menuOpen, setMenuOpen] = useState(false);
   const [auth, setAuth] = useState(null);
   const hasRun = useRef(false);
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const checkAuthStatus = async () => {
       if (hasRun.current) return; // Prevent multiple executions
@@ -46,7 +45,7 @@ const Index = () => {
           localStorage.setItem("access_token", accessToken);
           localStorage.setItem("expires_at", tokenExpiry);
           setAuth(accessToken);
-          navigate("/chat")
+          navigate("/chat");
         } else {
           navigate("/"); // Redirect to login if exchange fails
         }
@@ -59,7 +58,7 @@ const Index = () => {
   }, [setAuth, exchangeAuthCode, navigate]);
 
   const toggleMenu = () => {
-    setMenuOpen(prevState => !prevState);
+    setMenuOpen((prevState) => !prevState);
   };
 
   const displayCode = `const ally = new AllyAI({
@@ -80,26 +79,26 @@ const response = await ally.analyze({
   async function handleLogout() {
     const response = await logout();
 
-    console.log('response: ', response);
+    console.log("response: ", response);
 
     if (response.error) {
-      localStorage.removeItem('access_token');
+      localStorage.removeItem("access_token");
       setAuth(null);
-      navigate('/');
-      toast.error('Failed to logout. You have been logged out automatically');
+      navigate("/");
+      toast.error("Failed to logout. You have been logged out automatically");
     }
 
     if (response.status_code != 200) {
-      localStorage.removeItem('access_token');
+      localStorage.removeItem("access_token");
       setAuth(null);
-      navigate('/');
-      toast.error('Failed to logout. You have been logged out automatically');
+      navigate("/");
+      toast.error("Failed to logout. You have been logged out automatically");
     }
 
-    localStorage.removeItem('access_token');
+    localStorage.removeItem("access_token");
     setAuth(null);
-    navigate('/');
-    toast.success('Logged out successfully!');
+    navigate("/");
+    toast.success("Logged out successfully!");
   }
 
   return (
@@ -112,15 +111,31 @@ const response = await ally.analyze({
         </div>
         <nav>
           <ul>
-            <li><a href="#features">Features</a></li>
-            {/* <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#docs">Documentation</a></li> */}
-            <li><a href="#developer">Developer Portal</a></li>
+            <li>
+              <a href="#features">Features</a>
+            </li>
+            <li>
+              <a href="/playground">Playground</a>
+            </li>
+            <li>
+              <a href="#developer">Developer Portal</a>
+            </li>
           </ul>
           <div className="auth-buttons">
-            {!auth ? <><Button size='sm' variant='outline' onClick={handleGoogleLogin}>Sign In</Button>
-              <Button size='sm' onClick={handleGoogleLogin}>Sign Up</Button> </>
-              : <Button size='sm' onClick={handleLogout}>Logout</Button>}
+            {!auth ? (
+              <>
+                <Button size="sm" variant="outline" onClick={handleGoogleLogin}>
+                  Sign In
+                </Button>
+                <Button size="sm" onClick={handleGoogleLogin}>
+                  Sign Up
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={handleLogout}>
+                Logout
+              </Button>
+            )}
           </div>
         </nav>
         <Button variant="outline" className="menu-toggle" size="sm" onClick={() => toggleMenu()}>
@@ -131,15 +146,20 @@ const response = await ally.analyze({
 
       {/* Hero Section */}
       <section className="hero">
-        <div className='hero-left'>
+        <div className="hero-left">
           <h1>Your Ally for Every Conversation, Insight, and Idea.</h1>
-          <p>Experience the future of conversation with Ally, your AI companion that understands documents, transcribes media, and searches the web — all in one place.</p>
+          <p>
+            Experience the future of conversation with Ally, your AI companion that understands documents, transcribes media, and searches the web —
+            all in one place.
+          </p>
           <div className="cta-buttons">
             <Button size="lg">Start Chatting</Button>
-            <Button variant="outline" size="lg">Try Demo</Button>
+            <Button variant="outline" size="lg">
+              Try Demo
+            </Button>
           </div>
         </div>
-        <div className='hero-right'>
+        <div className="hero-right">
           <img src={assets.right_section} alt="Ally." />
         </div>
       </section>
@@ -182,12 +202,11 @@ const response = await ally.analyze({
         <div className="content">
           <h2>Customize Your Experience</h2>
           <p>Build powerful AI-driven applications with our developer-friendly tools and APIs.</p>
-          <Button size='sm'>Access Developer Portal</Button>
+          <Button size="sm">Access Developer Portal</Button>
         </div>
         <div className="code-preview">
           <pre>
-            <code>{displayCode}
-            </code>
+            <code>{displayCode}</code>
           </pre>
         </div>
       </section>
@@ -214,25 +233,43 @@ const response = await ally.analyze({
             <div className="link-column">
               <h3>Products</h3>
               <ul>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#pricing">Pricing</a></li>
-                <li><a href="#enterprise">Enterprise</a></li>
+                <li>
+                  <a href="#features">Features</a>
+                </li>
+                <li>
+                  <a href="#pricing">Pricing</a>
+                </li>
+                <li>
+                  <a href="#enterprise">Enterprise</a>
+                </li>
               </ul>
             </div>
             <div className="link-column">
               <h3>Company</h3>
               <ul>
-                <li><a href="#about">About</a></li>
-                <li><a href="#careers">Careers</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li>
+                  <a href="#about">About</a>
+                </li>
+                <li>
+                  <a href="#careers">Careers</a>
+                </li>
+                <li>
+                  <a href="#contact">Contact</a>
+                </li>
               </ul>
             </div>
             <div className="link-column">
               <h3>Legal</h3>
               <ul>
-                <li><a href="#privacy">Privacy</a></li>
-                <li><a href="#terms">Terms</a></li>
-                <li><a href="#security">Security</a></li>
+                <li>
+                  <a href="#privacy">Privacy</a>
+                </li>
+                <li>
+                  <a href="#terms">Terms</a>
+                </li>
+                <li>
+                  <a href="#security">Security</a>
+                </li>
               </ul>
             </div>
           </div>
@@ -246,33 +283,33 @@ const features = [
   {
     icon: "📄",
     title: "Document Analysis",
-    description: "Upload PDFs and get instant insights. Ally reads and understands your documents, making information retrieval effortless."
+    description: "Upload PDFs and get instant insights. Ally reads and understands your documents, making information retrieval effortless.",
   },
   {
     icon: "🎙️",
     title: "Media Transcription",
-    description: "Convert audio and video files into accurate transcripts with AI-powered transcription technology."
+    description: "Convert audio and video files into accurate transcripts with AI-powered transcription technology.",
   },
   {
     icon: "📝",
     title: "Custom Summaries",
-    description: "Generate precise summaries for specific segments of your media files, saving time and increasing productivity."
+    description: "Generate precise summaries for specific segments of your media files, saving time and increasing productivity.",
   },
   {
     icon: "🔍",
     title: "Web Search",
-    description: "Access real-time information from the web to enhance your conversations with up - to - date knowledge."
+    description: "Access real-time information from the web to enhance your conversations with up - to - date knowledge.",
   },
   {
     icon: "🛠️",
     title: "Developer Playground",
-    description: "Customize chunking strategies and LLM parameters in our developer-friendly environment."
+    description: "Customize chunking strategies and LLM parameters in our developer-friendly environment.",
   },
   {
     icon: "🤖",
     title: "AI Assistant",
-    description: "Experience natural conversations with our advanced AI that learns and adapts to your needs."
-  }
+    description: "Experience natural conversations with our advanced AI that learns and adapts to your needs.",
+  },
 ];
 
 export default Index;
