@@ -117,6 +117,17 @@ function FileUpload({ fileRef }) {
         const selectedFiles = Array.from(event.target.files);
         setError('');
 
+        const allowedTypes = ['.wav', '.mp3', '.mp4'];
+        const invalidFiles = selectedFiles.filter(file => {
+            const extension = '.' + file.name.split('.').pop().toLowerCase();
+            return !allowedTypes.includes(extension);
+        });
+
+        if (invalidFiles.length > 0) {
+            setError('Only .wav, .mp3, and .mp4 files are allowed');
+            return;
+        }
+
         // Validate file size
         const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
         if (oversizedFiles.length > 0) {
@@ -134,6 +145,14 @@ function FileUpload({ fileRef }) {
     const onFileSelect = useCallback((files) => {
         fileRef.current = files;
     }, []);
+
+    useEffect(() => {
+        console.log("error: ", error);
+        if (error === '') {
+            return;
+        }
+        toast.error(error);
+    }, [error]);
 
     const handleSubmit = useCallback(async () => {
         onFileSelect(inputFiles);
@@ -203,7 +222,7 @@ function FileUpload({ fileRef }) {
                                         <p className="file-upload__upload-text">
                                             <span className="file-upload__upload-text-bold">Click to upload</span> or drag and drop
                                         </p>
-                                        <p className="file-upload__upload-text-small">PDF, Images (max 10MB)</p>
+                                        <p className="file-upload__upload-text-small">.mp4, .wav (max 10MB)</p>
                                     </div>
                                     <input
                                         type="file"
