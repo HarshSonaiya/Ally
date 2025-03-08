@@ -9,7 +9,7 @@ export const ChatProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [files, setFiles] = useState(null);
+  const [files, setFiles] = useState([]);
 
   return (
     <ChatContext.Provider value={{ fileRef, projects, setProjects, currentProject, setCurrentProject, messages, setMessages, files, setFiles }}>

@@ -117,14 +117,14 @@ function FileUpload({ fileRef }) {
         const selectedFiles = Array.from(event.target.files);
         setError('');
 
-        const allowedTypes = ['.wav', '.mp3', '.mp4'];
+        const allowedTypes = ['.wav', '.mp4'];
         const invalidFiles = selectedFiles.filter(file => {
             const extension = '.' + file.name.split('.').pop().toLowerCase();
             return !allowedTypes.includes(extension);
         });
 
         if (invalidFiles.length > 0) {
-            setError('Only .wav, .mp3, and .mp4 files are allowed');
+            setError('Only .wav, .mp3, and files are allowed');
             return;
         }
 
@@ -161,7 +161,7 @@ function FileUpload({ fileRef }) {
         const response = await uploadFiles(inputFiles, currentProject.value);
         console.log("response: ", response);
 
-        if (response) {
+        if (response.success) {
             toast.success('Files uploaded successfully. Summary has been send to your email');
         } else {
             toast.error('Failed to upload files');
@@ -169,9 +169,8 @@ function FileUpload({ fileRef }) {
 
         const updatedFiles = await listFiles(currentProject.value);
 
-
-        if (updatedFiles.length > 0) {
-            setFiles(response);
+        if (updatedFiles.success) {
+            setFiles(() => updatedFiles.data);
         }
 
     }, [inputFiles, onFileSelect]);

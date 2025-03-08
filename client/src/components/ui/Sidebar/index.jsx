@@ -39,62 +39,6 @@ export default function Sidebar({ hidden, setHidden }) {
     }
 
     // const [hidden, setHidden] = useState(false);
-    const [recentChats, setRecentChats] = useState([
-        {
-            title: "What is React ??? sjssssssssssssssssss"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-        {
-            title: "What is React ???"
-        },
-    ]);
 
     useEffect(() => {
         async function list() {
@@ -105,13 +49,21 @@ export default function Sidebar({ hidden, setHidden }) {
 
             const response = await listFiles(currentProject.value);
 
-            if (response.length > 0) {
-                setFiles(response);
+            console.log("file response: ", response.data);
+            
+
+            if (response.success) {
+                setFiles(() => response.data);
             }
         }
 
         list()
     }, [currentProject]);
+
+    useEffect(() => {
+        console.log('files: ', files);
+        
+    }, [files])
 
     return (
         <aside className={`sidebar ${hidden ? 'hide__sidebar' : ''}`}>
@@ -165,7 +117,7 @@ export default function Sidebar({ hidden, setHidden }) {
             <div className="sidebar__footer">
                 <Button variant='ghost' size='sm' onClick={handleLogout} className="sidebar__footer-button">{"Logout"}</Button>
                 <Button variant='ghost' size='sm' className="sidebar__footer-button" onClick={() => navigate('/')}>{"Home"}</Button>
-                <Button variant='ghost' size='sm' className="sidebar__footer-button" onClick={() => navigate('/playground')}><SettingsIcon />{"Playground"}</Button>
+                <Button variant='ghost' size='sm' className="sidebar__footer-button" onClick={() => navigate('/playground')}>{"Playground"}</Button>
                 {/* <Button variant='ghost' size='sm' className="sidebar__footer-button"><HelpIcon />{"Help & FAQs"}</Button> */}
             </div>
         </aside >
