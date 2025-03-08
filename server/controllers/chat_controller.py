@@ -165,12 +165,13 @@ class ChatController:
                     200, "No transcript found for this workspace.", "None"
                 )
 
-            transcript = transcript_data.get("transcript", "")
-            logger.info(transcript)
+            transcripts = "\n\n".join([data.get("transcript", "") for data in transcript_data])
+
+            logger.info(transcripts)
 
             # Build the context using transcript and extracted query details
             context = (
-                f"Transcript:\n{transcript}\n\nUser Query: {classified_query.query}"
+                f"Transcript:\n{transcripts}\n\nUser Query: {classified_query.query}"
             )
 
             if classified_query.start_timestamp and classified_query.end_timestamp:

@@ -62,6 +62,7 @@ class FileProcessingService:
 
             # Generate full transcript and embeddings.
             processed_data = self.transcript_processor.process_content(formatted_transcript)
+            processed_data["transcript"] = f"Transcript for {file.filename}:\n\n{processed_data['transcript']}"
 
             # Generate LaBSE embeddings for the entire transcript
             summary = self.summarization_service.generate_response(AUDIO_SUMMARY_PROMPT.format(context=formatted_transcript))
