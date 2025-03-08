@@ -117,7 +117,7 @@ function FileUpload({ fileRef }) {
         const selectedFiles = Array.from(event.target.files);
         setError('');
 
-        const allowedTypes = ['.wav', '.mp4'];
+        const allowedTypes = ['.wav', '.mp3'];
         const invalidFiles = selectedFiles.filter(file => {
             const extension = '.' + file.name.split('.').pop().toLowerCase();
             return !allowedTypes.includes(extension);
@@ -227,7 +227,7 @@ function FileUpload({ fileRef }) {
                                         type="file"
                                         className="file-upload__input-hidden"
                                         multiple
-                                        accept=".mp4, .wav"
+                                        accept=".mp3, .wav"
                                         onChange={handleFileChange}
                                     />
                                 </label>
