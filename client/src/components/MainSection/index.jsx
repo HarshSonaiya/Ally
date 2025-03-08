@@ -150,14 +150,16 @@ export default function MainSection({ hidden, setHidden }) {
 
     console.log("Response: ", response);
 
-    if (response.status_code === 200) {
-      toast.success("Project created successfully!");
+    if (response.success) {
       setProjects((prev) => [
         ...prev,
         { value: projectName, label: projectName },
       ]);
+      toast.success("Project created successfully!");
       setIsOpen(false);
       setProjectName("");
+    } else {
+      toast.error("Error creating project. Please try again.");
     }
 
     fetchProjects();

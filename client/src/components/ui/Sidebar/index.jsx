@@ -99,6 +99,10 @@ export default function Sidebar({ hidden, setHidden }) {
     useEffect(() => {
         async function list() {
 
+            if (!currentProject) {
+                return;
+            }
+
             const response = await listFiles(currentProject.value);
 
             if (response.length > 0) {
@@ -160,7 +164,8 @@ export default function Sidebar({ hidden, setHidden }) {
             {/* </div> */}
             <div className="sidebar__footer">
                 <Button variant='ghost' size='sm' onClick={handleLogout} className="sidebar__footer-button">{"Logout"}</Button>
-                <Button variant='ghost' size='sm' className="sidebar__footer-button"><SettingsIcon />{"Settings"}</Button>
+                <Button variant='ghost' size='sm' className="sidebar__footer-button" onClick={() => navigate('/')}>{"Home"}</Button>
+                <Button variant='ghost' size='sm' className="sidebar__footer-button" onClick={() => navigate('/playground')}><SettingsIcon />{"Playground"}</Button>
                 {/* <Button variant='ghost' size='sm' className="sidebar__footer-button"><HelpIcon />{"Help & FAQs"}</Button> */}
             </div>
         </aside >
